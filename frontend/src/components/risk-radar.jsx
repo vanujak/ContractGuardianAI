@@ -76,14 +76,14 @@ export default function RiskRadar({
                     </Badge>
                   </div>
 
-                  <p className="text-xs text-slate-300 leading-relaxed">
+                  <p className="text-sm text-slate-200 leading-relaxed">
                     {risk.riskReason}
                   </p>
 
                   {/* Trigger Clause Box */}
                   <div className="bg-slate-950/80 border border-slate-900 rounded p-2.5 space-y-1 relative">
                     <span className="text-[9px] font-semibold text-indigo-400 uppercase tracking-widest block">Contract Wording:</span>
-                    <p className="text-[11px] text-slate-400 italic leading-normal pr-8">
+                    <p className="text-xs text-slate-300 italic leading-normal pr-8">
                       "{risk.triggerText}"
                     </p>
                     <button
@@ -127,14 +127,14 @@ export default function RiskRadar({
                     </Badge>
                   </div>
 
-                  <p className="text-xs text-slate-300 leading-relaxed">
+                  <p className="text-sm text-slate-200 leading-relaxed">
                     {clause.explanation}
                   </p>
 
                   {/* Template Snippet */}
                   <div className="bg-slate-950/80 border border-slate-900 rounded p-2.5 space-y-1 relative group">
                     <span className="text-[9px] font-semibold text-emerald-400 uppercase tracking-widest block">Proposed Template Wording:</span>
-                    <p className="text-[11px] text-slate-400 font-mono leading-normal pr-8">
+                    <p className="text-xs text-slate-300 font-mono leading-normal pr-8">
                       {clause.sampleTemplate}
                     </p>
                     <div className="absolute right-2 top-2 flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">

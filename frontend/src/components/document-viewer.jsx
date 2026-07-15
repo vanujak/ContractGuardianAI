@@ -88,10 +88,10 @@ export default function DocumentViewer({
             ref={highlightedRef} 
             className="flex items-start gap-4 py-1.5 border-l-2 border-indigo-500/80 bg-indigo-950/10 px-2 my-2 transition-all duration-300"
           >
-            <div className="text-[10px] font-mono text-slate-500 w-8 select-none pt-0.5 text-right font-semibold">
+            <div className="text-[10px] font-mono text-slate-400 w-8 select-none pt-0.5 text-right font-semibold">
               L{startLine}
             </div>
-            <p className="flex-1 text-xs text-slate-200 leading-relaxed font-sans whitespace-pre-wrap">
+            <p className="flex-1 text-sm text-[#F3F4F6] leading-relaxed font-sans whitespace-pre-wrap">
               {before}
               <span className={highlightClass}>
                 {exactTriggerText}
@@ -105,10 +105,10 @@ export default function DocumentViewer({
       // Normal paragraph
       return (
         <div key={pIdx} className="flex items-start gap-4 py-1 border-l-2 border-transparent px-2 hover:bg-slate-900/20 transition-colors">
-          <div className="text-[10px] font-mono text-slate-600 w-8 select-none pt-0.5 text-right">
+          <div className="text-[10px] font-mono text-slate-500 w-8 select-none pt-0.5 text-right">
             L{startLine}
           </div>
-          <p className="flex-1 text-xs text-slate-350 leading-relaxed font-sans whitespace-pre-wrap">
+          <p className="flex-1 text-sm text-[#D1D5DB] leading-relaxed font-sans whitespace-pre-wrap">
             {para}
           </p>
         </div>
@@ -117,10 +117,10 @@ export default function DocumentViewer({
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] border border-slate-800/85 rounded-xl overflow-hidden bg-slate-950/30">
+    <div className="flex flex-col h-[calc(100vh-140px)] border border-border rounded-xl overflow-hidden bg-card/30">
       
       {/* Viewer Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-slate-950 border-b border-slate-900">
+      <div className="flex items-center justify-between px-4 py-3 bg-card border-b border-border">
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold text-slate-200">Active Document Workspace</span>
           {saveSuccess && (
@@ -178,7 +178,7 @@ export default function DocumentViewer({
       {/* Editor or Viewer Body */}
       <div 
         ref={containerRef} 
-        className="flex-1 p-4 overflow-y-auto bg-[#080C14] relative"
+        className="flex-1 p-4 overflow-y-auto bg-background relative"
       >
         {/* Glow scan indicator when changing persona */}
         {highlightText && (
@@ -189,7 +189,7 @@ export default function DocumentViewer({
           <textarea
             value={editedText}
             onChange={(e) => setEditedText(e.target.value)}
-            className="w-full h-full bg-slate-950 text-slate-200 p-4 font-mono text-xs border border-slate-800 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500/50 resize-none leading-relaxed"
+            className="w-full h-full bg-background text-foreground p-4 font-mono text-xs border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none leading-relaxed"
           />
         ) : (
           <div className="space-y-1 font-mono">

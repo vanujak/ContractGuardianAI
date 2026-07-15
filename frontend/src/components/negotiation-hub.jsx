@@ -55,7 +55,7 @@ export default function NegotiationHub({
                   {/* Explanatory benefit */}
                   <div className="flex gap-2">
                     <Edit3 className="w-3.5 h-3.5 text-indigo-400 mt-0.5 shrink-0" />
-                    <p className="text-xs text-slate-200 leading-relaxed">
+                    <p className="text-sm text-slate-200 leading-relaxed font-medium">
                       {item.explanation}
                     </p>
                   </div>
@@ -66,7 +66,7 @@ export default function NegotiationHub({
                     {/* Original Clause */}
                     <div className="bg-rose-950/10 border border-rose-900/30 rounded-lg p-3 space-y-1.5">
                       <span className="text-[9px] font-bold text-rose-400 uppercase tracking-widest block">Original Wording</span>
-                      <p className="text-[11px] text-slate-400 leading-relaxed italic">
+                      <p className="text-xs text-slate-300 leading-relaxed italic">
                         "{item.triggerText}"
                       </p>
                     </div>
@@ -74,7 +74,7 @@ export default function NegotiationHub({
                     {/* Proposed Wording */}
                     <div className="bg-emerald-950/15 border border-emerald-900/40 rounded-lg p-3 space-y-1.5 relative group">
                       <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest block">Proposed Balanced Wording</span>
-                      <p className="text-[11px] text-slate-300 leading-relaxed">
+                      <p className="text-xs text-slate-300 leading-relaxed">
                         {item.proposedWording}
                       </p>
                     </div>

@@ -79,14 +79,12 @@ export default function CompareContracts({
                 accept=".pdf,.txt"
                 onChange={handleUploadB}
               />
-              <Button
-                asChild
-                className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-8 px-4 rounded cursor-pointer"
+              <label 
+                htmlFor="fileB-upload"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-8 px-4 rounded cursor-pointer inline-flex items-center justify-center transition-all"
               >
-                <label htmlFor="fileB-upload">
-                  Browse File
-                </label>
-              </Button>
+                Browse File
+              </label>
               
               {isDemoMode && (
                 <Button

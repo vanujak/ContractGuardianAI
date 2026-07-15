@@ -26,6 +26,7 @@ import NegotiationHub from "@/components/negotiation-hub";
 import ComplianceGuard from "@/components/compliance-guard";
 import ChatAssistant from "@/components/chat-assistant";
 import CompareContracts from "@/components/compare-contracts";
+import ThemeSelector from "@/components/theme-selector";
 
 // Mock data & API wrappers
 import { MOCK_CONTRACTS, MOCK_ANALYSES } from "@/lib/mock-data";
@@ -357,11 +358,20 @@ export default function Home() {
   ];
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen bg-[#080C14] text-[#F3F4F6] selection:bg-indigo-600/40 selection:text-white">
+    <div className="flex-1 flex flex-col min-h-screen bg-background text-foreground selection:bg-indigo-600/40 selection:text-white">
       
       {/* LANDING SCREEN */}
       {screen === "landing" && (
-        <div className="flex-1 flex flex-col items-center justify-center max-w-5xl mx-auto px-6 py-12">
+        <div className="flex-1 flex flex-col w-full">
+          {/* Landing Header */}
+          <header className="w-full flex items-center justify-between px-6 py-4 max-w-5xl mx-auto shrink-0">
+            <span className="text-sm font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-1">
+              Contract Guardian <span className="bg-indigo-600 text-[9px] font-bold text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider">AI</span>
+            </span>
+            <ThemeSelector />
+          </header>
+          
+          <div className="flex-1 flex flex-col items-center justify-center max-w-5xl mx-auto px-6 py-6 w-full">
           
           {/* Header Title */}
           <div className="text-center space-y-4 max-w-2xl mb-12 mt-6">
@@ -369,10 +379,10 @@ export default function Home() {
               <Sparkles className="w-3.5 h-3.5" />
               Contract Guardian AI Workspace
             </div>
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white leading-tight">
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
               Understand, analyze, and <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent">improve contracts</span> with AI.
             </h1>
-            <p className="text-sm text-slate-400 leading-relaxed max-w-lg mx-auto">
+            <p className="text-base text-slate-600 dark:text-slate-350 leading-relaxed max-w-xl mx-auto">
               An advanced workspace that reviews agreements from your specific persona's perspective, audits regional laws, and helps you draft fairer terms.
             </p>
           </div>
@@ -387,15 +397,15 @@ export default function Home() {
               className={`glass-panel rounded-2xl border-2 border-dashed p-10 text-center flex flex-col items-center justify-center transition-all duration-300 relative ${
                 dragActive 
                   ? "border-indigo-500 bg-indigo-950/15 shadow-indigo-950/20 shadow-2xl" 
-                  : "border-slate-800 bg-slate-900/10 hover:border-slate-700/80"
+                  : "border-slate-350 dark:border-slate-800 bg-slate-100/10 dark:bg-slate-900/10 hover:border-indigo-500/50"
               }`}
             >
-              <div className="w-14 h-14 rounded-full bg-slate-950/60 border border-slate-900/60 flex items-center justify-center mb-4 text-indigo-400">
+              <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-900/60 flex items-center justify-center mb-4 text-indigo-400">
                 <Upload className="w-6 h-6 stroke-1.5" />
               </div>
               <div className="space-y-1.5 mb-6">
-                <h3 className="text-sm font-bold text-slate-200">Drag & Drop Contract File</h3>
-                <p className="text-xs text-slate-400 max-w-[280px]">
+                <h3 className="text-sm font-bold text-slate-850 dark:text-slate-200">Drag & Drop Contract File</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-300 max-w-[280px]">
                   Supports PDF or TXT files. Maximum size 10MB.
                 </p>
               </div>
@@ -407,17 +417,15 @@ export default function Home() {
                 accept=".pdf,.txt"
                 onChange={(e) => handleFileUpload(e.target.files?.[0])}
               />
-              <Button
-                asChild
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-6 py-2 rounded-lg cursor-pointer shadow-lg shadow-indigo-600/10 h-9"
+              <label 
+                htmlFor="contract-upload"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-6 py-2 rounded-lg cursor-pointer shadow-lg shadow-indigo-600/10 h-9 inline-flex items-center justify-center transition-all"
               >
-                <label htmlFor="contract-upload">
-                  Select Document
-                </label>
-              </Button>
+                Select Document
+              </label>
 
               {uploadError && (
-                <div className="mt-4 flex items-center gap-1.5 text-xs text-rose-400 bg-rose-950/20 border border-rose-900/40 px-3 py-1.5 rounded-lg">
+                <div className="mt-4 flex items-center gap-1.5 text-xs text-rose-450 bg-rose-950/20 border border-rose-900/40 px-3 py-1.5 rounded-lg">
                   <AlertCircle className="w-3.5 h-3.5" />
                   <span>{uploadError}</span>
                 </div>
@@ -427,9 +435,9 @@ export default function Home() {
 
           {/* Preset Demos Grid */}
           <div className="w-full space-y-4">
-            <div className="flex items-center gap-2 border-b border-slate-900 pb-2">
+            <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-900 pb-2">
               <FileCheck2 className="w-4 h-4 text-indigo-400" />
-              <h2 className="text-xs font-bold text-slate-350 uppercase tracking-wider">
+              <h2 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Or Start Instantly with a Demo Contract
               </h2>
             </div>
@@ -439,19 +447,19 @@ export default function Home() {
                 <Card 
                   key={demo.id} 
                   onClick={() => handleSelectDemo(demo)}
-                  className="glass-panel border-slate-800/80 hover:border-indigo-500/30 p-5 cursor-pointer group hover:bg-indigo-950/5 hover:-translate-y-0.5 transition-all duration-300"
+                  className="glass-panel border-slate-200 dark:border-slate-800/80 hover:border-indigo-500/30 p-5 cursor-pointer group hover:bg-indigo-950/5 hover:-translate-y-0.5 transition-all duration-300"
                 >
                   <CardContent className="p-0 space-y-3">
                     <div className="flex items-center gap-2">
                       <FileText className="w-4 h-4 text-indigo-400" />
-                      <span className="text-xs font-bold text-slate-200 group-hover:text-indigo-400 transition-colors">
+                      <span className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-indigo-400 transition-colors">
                         {demo.title}
                       </span>
                     </div>
-                    <p className="text-[11px] leading-relaxed text-slate-450">
+                    <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-300">
                       {demo.desc}
                     </p>
-                    <div className="flex items-center gap-1 text-[10px] font-bold text-indigo-400 uppercase tracking-wider pt-1">
+                    <div className="flex items-center gap-1 text-xs font-bold text-indigo-400 uppercase tracking-wider pt-1">
                       Start Review <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                     </div>
                   </CardContent>
@@ -467,11 +475,12 @@ export default function Home() {
           </div>
 
         </div>
+      </div>
       )}
 
       {/* PROCESSING SCREEN */}
       {screen === "processing" && (
-        <div className="flex-1 flex flex-col items-center justify-center bg-[#080C14]">
+        <div className="flex-1 flex flex-col items-center justify-center bg-background">
           <div className="space-y-6 text-center max-w-sm">
             <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
               <div className="absolute inset-0 rounded-full border-2 border-indigo-900" />
@@ -494,7 +503,7 @@ export default function Home() {
         <div className="flex-1 flex flex-col h-screen overflow-hidden">
           
           {/* Workspace Header */}
-          <header className="px-6 py-3 bg-slate-950 border-b border-slate-900 flex items-center justify-between shrink-0">
+          <header className="px-6 py-3 bg-card border-b border-border flex items-center justify-between shrink-0">
             <div className="flex items-center gap-4">
               <button 
                 onClick={() => setScreen("landing")}
@@ -515,16 +524,19 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Persona Selector Trigger */}
-            <PersonaSelector
-              currentPersona={currentPersona}
-              onChange={handlePersonaChange}
-              disabled={false}
-            />
+            {/* Controls: Theme & Persona */}
+            <div className="flex items-center gap-3">
+              <ThemeSelector />
+              <PersonaSelector
+                currentPersona={currentPersona}
+                onChange={handlePersonaChange}
+                disabled={false}
+              />
+            </div>
           </header>
 
           {/* Workspace Layout Workspace grid */}
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden bg-[#080C14]">
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden bg-background">
             
             {/* Left Pane: Document Viewer */}
             <div className="lg:col-span-6 p-4 overflow-hidden border-r border-slate-900/60 flex flex-col">

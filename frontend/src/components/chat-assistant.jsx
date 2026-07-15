@@ -106,7 +106,7 @@ export default function ChatAssistant({
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-230px)] max-h-[600px] border border-slate-800/80 rounded-xl overflow-hidden bg-slate-950/20">
+    <div className="flex flex-col h-[calc(100vh-230px)] max-h-[600px] border border-border rounded-xl overflow-hidden bg-card/25">
       
       {/* Chat Messages */}
       <ScrollArea className="flex-1 p-4">
@@ -133,7 +133,7 @@ export default function ChatAssistant({
 
                 {/* Message Bubble */}
                 <div
-                  className={`p-3 rounded-lg text-xs leading-relaxed ${
+                  className={`p-3 rounded-lg text-sm leading-relaxed ${
                     isAI
                       ? "bg-slate-900/60 border border-slate-900/80 text-slate-200 rounded-tl-none"
                       : "bg-indigo-600/10 border border-indigo-500/20 text-slate-100 rounded-tr-none"
@@ -153,7 +153,7 @@ export default function ChatAssistant({
               <div className="w-7 h-7 rounded-full bg-slate-900 border border-slate-800 text-indigo-400 flex items-center justify-center shrink-0">
                 <Bot className="w-4 h-4" />
               </div>
-              <div className="bg-slate-900/40 border border-slate-900/80 text-slate-400 p-3 rounded-lg rounded-tl-none flex items-center gap-2 text-xs">
+              <div className="bg-slate-900/40 border border-slate-900/80 text-slate-400 p-3 rounded-lg rounded-tl-none flex items-center gap-2 text-sm">
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" />
                 Thinking...
               </div>
@@ -165,7 +165,7 @@ export default function ChatAssistant({
 
       {/* Suggested Questions Pills */}
       {messages.length === 1 && (
-        <div className="px-4 py-2 border-t border-slate-900/50 bg-slate-950/40 space-y-1.5">
+        <div className="px-4 py-2 border-t border-border bg-muted/40 space-y-1.5">
           <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest flex items-center gap-1">
             <Sparkles className="w-2.5 h-2.5 text-indigo-400" /> Suggested Questions:
           </span>
@@ -190,7 +190,7 @@ export default function ChatAssistant({
           e.preventDefault();
           handleSend();
         }}
-        className="p-3 bg-slate-950 border-t border-slate-900 flex gap-2"
+        className="p-3 bg-card border-t border-border flex gap-2"
       >
         <Input
           value={input}

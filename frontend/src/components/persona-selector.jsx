@@ -53,20 +53,20 @@ export default function PersonaSelector({ currentPersona, onChange, disabled }) 
         onValueChange={onChange}
         disabled={disabled}
       >
-        <SelectTrigger className="w-[200px] bg-slate-900/60 border-slate-800 text-slate-200 h-9 rounded-md focus:ring-indigo-500">
+        <SelectTrigger className="w-[200px] bg-background border-border text-foreground h-9 rounded-md focus:ring-indigo-500">
           <div className="flex items-center gap-2">
             <ActiveIcon className={`w-4 h-4 ${getPersonaColor(currentPersona)}`} />
             <SelectValue placeholder="Select Persona" />
           </div>
         </SelectTrigger>
-        <SelectContent className="bg-slate-950 border-slate-800 text-slate-200">
+        <SelectContent className="bg-popover border-border text-popover-foreground">
           {PERSONAS.map((persona) => {
             const IconComponent = persona.icon;
             return (
               <SelectItem
                 key={persona.id}
                 value={persona.id}
-                className="focus:bg-indigo-950 focus:text-white cursor-pointer"
+                className="cursor-pointer"
               >
                 <div className="flex items-center gap-2">
                   <IconComponent className={`w-4 h-4 ${persona.color}`} />
