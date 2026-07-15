@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Edit2, Download, Check } from "lucide-react";
+import { Edit2, Download, Check, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -7,12 +7,17 @@ export default function DocumentViewer({
   rawText,
   highlightText,
   highlightSeverity,
+  onSaveDraft,
   onSaveEdit,
+  analysisStale = false,
+  isAnalyzingDraft = false,
+  remainingReanalyses = 0,
   className
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState(rawText);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState("");
   
   const highlightedRef = useRef(null);
   const containerRef = useRef(null);
@@ -35,11 +40,52 @@ export default function DocumentViewer({
   }, [highlightText, highlightSeverity]);
 
   // Handler for saving edits
-  const handleSave = () => {
-    onSaveEdit(editedText);
-    setIsEditing(false);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2500);
+  const handleSaveDraft = async () => {
+    setSaveError("");
+    try {
+      await onSaveDraft(editedText);
+      setIsEditing(false);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    } catch (e) {
+      console.error("Failed to save draft", e);
+      setSaveError("Save failed");
+    }
+  };
+
+  const handleSaveAndReanalyze = async () => {
+    setSaveError("");
+    if (remainingReanalyses <= 0) {
+      setSaveError("No re-analyses left");
+      return;
+    }
+
+    try {
+      await onSaveEdit(editedText);
+      setIsEditing(false);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    } catch (e) {
+      console.error("Failed to save and refresh draft", e);
+      setSaveError("Refresh failed");
+    }
+  };
+
+  const handleRefreshCurrentDraft = async () => {
+    setSaveError("");
+    if (remainingReanalyses <= 0) {
+      setSaveError("No re-analyses left");
+      return;
+    }
+
+    try {
+      await onSaveEdit(rawText);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    } catch (e) {
+      console.error("Failed to refresh draft analysis", e);
+      setSaveError("Refresh failed");
+    }
   };
 
   // Download contract text
@@ -122,10 +168,32 @@ export default function DocumentViewer({
       
       {/* Viewer Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <FileText className="h-4 w-4 shrink-0 text-indigo-500 dark:text-indigo-400" />
+            <div className="min-w-0">
+              <h2 className="truncate text-sm font-bold text-slate-900 dark:text-slate-100">
+                Live Contract Editor
+              </h2>
+              <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                {isAnalyzingDraft
+                  ? "Refreshing analysis"
+                  : isEditing
+                    ? "Editing draft"
+                    : analysisStale
+                      ? "Analysis needs refresh"
+                      : "Review mode"}
+              </p>
+            </div>
+          </div>
           {saveSuccess && (
             <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/30 px-2 py-0.5 border border-emerald-800/30 rounded flex items-center gap-1 animate-pulse">
               <Check className="w-3 h-3" /> Draft Updated
+            </span>
+          )}
+          {saveError && (
+            <span className="text-[10px] text-rose-500 font-bold bg-rose-50 dark:bg-rose-950/30 px-2 py-0.5 border border-rose-200 dark:border-rose-900/50 rounded">
+              {saveError}
             </span>
           )}
         </div>
@@ -133,6 +201,15 @@ export default function DocumentViewer({
         <div className="flex gap-2">
           {isEditing ? (
             <>
+              <span
+                className={`hidden items-center rounded border px-2 text-[10px] font-semibold uppercase tracking-wider lg:inline-flex ${
+                  remainingReanalyses > 0
+                    ? "border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:text-indigo-400"
+                    : "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-400"
+                }`}
+              >
+                {remainingReanalyses} left
+              </span>
               <Button
                 variant="outline"
                 size="sm"
@@ -145,19 +222,54 @@ export default function DocumentViewer({
                 Cancel
               </Button>
               <Button
+                variant="outline"
                 size="sm"
-                onClick={handleSave}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white h-7 text-[11px] rounded px-3 font-semibold"
+                onClick={handleSaveDraft}
+                disabled={isAnalyzingDraft}
+                className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 h-7 text-[11px] rounded px-3"
               >
                 Save Draft
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSaveAndReanalyze}
+                disabled={isAnalyzingDraft || remainingReanalyses <= 0}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white h-7 text-[11px] rounded px-3 font-semibold disabled:opacity-60"
+              >
+                {isAnalyzingDraft ? "Refreshing..." : "Save & Re-analyze"}
               </Button>
             </>
           ) : (
             <>
+              <span
+                className={`hidden items-center rounded border px-2 text-[10px] font-semibold uppercase tracking-wider sm:inline-flex ${
+                  remainingReanalyses > 0
+                    ? "border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:text-indigo-400"
+                    : "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-400"
+                }`}
+              >
+                {remainingReanalyses} re-analyses left
+              </span>
+              {analysisStale && (
+                <span className="hidden items-center rounded border border-amber-200 bg-amber-50 px-2 text-[10px] font-semibold uppercase tracking-wider text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-400 sm:inline-flex">
+                  Outdated
+                </span>
+              )}
+              {analysisStale && (
+                <Button
+                  size="sm"
+                  onClick={handleRefreshCurrentDraft}
+                  disabled={isAnalyzingDraft || remainingReanalyses <= 0}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white h-7 text-[11px] rounded px-3 font-semibold disabled:opacity-60"
+                >
+                  {isAnalyzingDraft ? "Refreshing..." : "Re-analyze"}
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsEditing(true)}
+                disabled={isAnalyzingDraft}
                 className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 h-7 text-[11px] rounded px-3"
               >
                 <Edit2 className="w-3 h-3 mr-1" /> Edit Text
