@@ -154,6 +154,96 @@
   .glow-text-amber {
     text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
   }
+
+  .app-animated-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    background:
+      linear-gradient(135deg, rgba(99, 102, 241, 0.1), transparent 28%),
+      linear-gradient(315deg, rgba(16, 185, 129, 0.08), transparent 26%),
+      linear-gradient(180deg, rgba(245, 158, 11, 0.06), transparent 42%),
+      var(--background);
+  }
+
+  .app-animated-bg::before,
+  .app-animated-bg::after {
+    content: "";
+    position: absolute;
+    inset: -20%;
+    will-change: transform;
+  }
+
+  .app-animated-bg::before {
+    background-image:
+      linear-gradient(rgba(99, 102, 241, 0.09) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(16, 185, 129, 0.07) 1px, transparent 1px);
+    background-size: 72px 72px;
+    mask-image: linear-gradient(to bottom, transparent, black 18%, black 78%, transparent);
+    animation: background-grid-drift 28s linear infinite;
+  }
+
+  .app-animated-bg::after {
+    background:
+      repeating-linear-gradient(
+        115deg,
+        transparent 0,
+        transparent 86px,
+        rgba(99, 102, 241, 0.065) 87px,
+        transparent 89px
+      ),
+      linear-gradient(
+        90deg,
+        transparent,
+        rgba(16, 185, 129, 0.055),
+        transparent,
+        rgba(245, 158, 11, 0.045),
+        transparent
+      );
+    opacity: 0.9;
+    animation: background-band-sweep 22s ease-in-out infinite alternate;
+  }
+
+  .dark .app-animated-bg {
+    background:
+      linear-gradient(135deg, rgba(99, 102, 241, 0.16), transparent 30%),
+      linear-gradient(315deg, rgba(20, 184, 166, 0.1), transparent 28%),
+      linear-gradient(180deg, rgba(245, 158, 11, 0.055), transparent 46%),
+      var(--background);
+  }
+
+  .dark .app-animated-bg::before {
+    background-image:
+      linear-gradient(rgba(129, 140, 248, 0.09) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(45, 212, 191, 0.07) 1px, transparent 1px);
+  }
+}
+
+@keyframes background-grid-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(72px, 72px, 0);
+  }
+}
+
+@keyframes background-band-sweep {
+  from {
+    transform: translate3d(-4%, -2%, 0) rotate(0deg);
+  }
+  to {
+    transform: translate3d(4%, 2%, 0) rotate(1deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-animated-bg::before,
+  .app-animated-bg::after {
+    animation: none;
+  }
 }
 
 /* Custom Scrollbars */
