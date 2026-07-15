@@ -657,10 +657,10 @@ export default function Home() {
           {/* Workspace Layout */}
           <div className="relative z-10 flex-1 min-h-0 overflow-hidden bg-transparent">
             <div
-              className={`grid h-full min-h-0 gap-4 p-4 lg:p-6 xl:gap-6 ${
+              className={`mx-auto grid h-full min-h-0 gap-4 p-4 transition-[max-width] duration-300 lg:p-6 xl:gap-6 ${
                 isEditorVisible
-                  ? "grid-rows-[minmax(0,1fr)_minmax(0,42dvh)] lg:grid-cols-[minmax(0,1fr)_minmax(340px,480px)] lg:grid-rows-1 xl:grid-cols-[minmax(0,1fr)_minmax(380px,520px)]"
-                  : "grid-rows-1 grid-cols-1"
+                  ? "w-full max-w-none grid-rows-[minmax(0,1fr)_minmax(0,42dvh)] lg:grid-cols-[minmax(0,1fr)_minmax(340px,480px)] lg:grid-rows-1 xl:grid-cols-[minmax(0,1fr)_minmax(380px,520px)]"
+                  : "w-full max-w-6xl grid-rows-1 grid-cols-1"
               }`}
             >
               {/* Analysis Tabs */}
