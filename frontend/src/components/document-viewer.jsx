@@ -1,13 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Edit2, Eye, Download, Check } from "lucide-react";
+import { Edit2, Download, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default function DocumentViewer({
   rawText,
   highlightText,
   highlightSeverity,
-  onTextChange,
-  onSaveEdit
+  onSaveEdit,
+  className
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState(rawText);
@@ -91,7 +92,7 @@ export default function DocumentViewer({
             <div className="text-[10px] font-mono text-slate-400 w-8 select-none pt-0.5 text-right font-semibold">
               L{startLine}
             </div>
-            <p className="flex-1 text-sm text-[#F3F4F6] leading-relaxed font-sans whitespace-pre-wrap">
+            <p className="flex-1 text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-sans whitespace-pre-wrap">
               {before}
               <span className={highlightClass}>
                 {exactTriggerText}
@@ -104,11 +105,11 @@ export default function DocumentViewer({
 
       // Normal paragraph
       return (
-        <div key={pIdx} className="flex items-start gap-4 py-1 border-l-2 border-transparent px-2 hover:bg-slate-900/20 transition-colors">
+        <div key={pIdx} className="flex items-start gap-4 py-1 border-l-2 border-transparent px-2 hover:bg-slate-900/10 dark:hover:bg-slate-900/20 transition-colors">
           <div className="text-[10px] font-mono text-slate-500 w-8 select-none pt-0.5 text-right">
             L{startLine}
           </div>
-          <p className="flex-1 text-sm text-[#D1D5DB] leading-relaxed font-sans whitespace-pre-wrap">
+          <p className="flex-1 text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-sans whitespace-pre-wrap">
             {para}
           </p>
         </div>
@@ -117,12 +118,11 @@ export default function DocumentViewer({
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] border border-border rounded-xl overflow-hidden bg-card/30">
+    <div className={cn("flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900", className)}>
       
       {/* Viewer Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-card border-b border-border">
+      <div className="flex items-center justify-between px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-slate-200">Active Document Workspace</span>
           {saveSuccess && (
             <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/30 px-2 py-0.5 border border-emerald-800/30 rounded flex items-center gap-1 animate-pulse">
               <Check className="w-3 h-3" /> Draft Updated
@@ -140,7 +140,7 @@ export default function DocumentViewer({
                   setEditedText(rawText);
                   setIsEditing(false);
                 }}
-                className="bg-slate-900 border-slate-800 text-slate-400 hover:text-white h-7 text-[11px] rounded px-3"
+                className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 h-7 text-[11px] rounded px-3"
               >
                 Cancel
               </Button>
@@ -158,7 +158,7 @@ export default function DocumentViewer({
                 variant="outline"
                 size="sm"
                 onClick={() => setIsEditing(true)}
-                className="bg-slate-900 border-slate-800 text-slate-300 hover:text-white h-7 text-[11px] rounded px-3"
+                className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 h-7 text-[11px] rounded px-3"
               >
                 <Edit2 className="w-3 h-3 mr-1" /> Edit Text
               </Button>
@@ -166,7 +166,7 @@ export default function DocumentViewer({
                 variant="outline"
                 size="sm"
                 onClick={handleDownload}
-                className="bg-slate-900 border-slate-800 text-slate-300 hover:text-white h-7 text-[11px] rounded px-3"
+                className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 h-7 text-[11px] rounded px-3"
               >
                 <Download className="w-3 h-3 mr-1" /> Download
               </Button>
@@ -178,7 +178,7 @@ export default function DocumentViewer({
       {/* Editor or Viewer Body */}
       <div 
         ref={containerRef} 
-        className="flex-1 p-4 overflow-y-auto bg-background relative"
+        className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white p-4 [scrollbar-gutter:stable] dark:bg-slate-900"
       >
         {/* Glow scan indicator when changing persona */}
         {highlightText && (
@@ -189,7 +189,7 @@ export default function DocumentViewer({
           <textarea
             value={editedText}
             onChange={(e) => setEditedText(e.target.value)}
-            className="w-full h-full bg-background text-foreground p-4 font-mono text-xs border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none leading-relaxed"
+            className="h-full min-h-0 w-full resize-none rounded border border-slate-200 bg-white p-4 font-mono text-sm leading-relaxed text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
           />
         ) : (
           <div className="space-y-1 font-mono">

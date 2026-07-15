@@ -74,13 +74,24 @@ export default function ThemeSelector() {
     }
   };
 
+  const getThemeLabel = (currentTheme) => {
+    switch (currentTheme) {
+      case "dark":
+        return "Dark Mode";
+      case "light":
+        return "Light Mode";
+      default:
+        return "System Default";
+    }
+  };
+
   return (
     <div className="flex items-center gap-2">
       <Select value={theme} onValueChange={setTheme}>
-        <SelectTrigger className="w-[140px] bg-background border-border text-foreground h-8 rounded text-xs select-trigger-theme focus:ring-indigo-500">
+        <SelectTrigger className="w-[150px] bg-background border-border text-foreground h-8 rounded text-xs select-trigger-theme focus:ring-indigo-500">
           <div className="flex items-center gap-2">
             {getThemeIcon(theme)}
-            <SelectValue placeholder="Theme" />
+            <span className="font-medium">{getThemeLabel(theme)}</span>
           </div>
         </SelectTrigger>
         <SelectContent className="bg-popover border-border text-popover-foreground text-xs">

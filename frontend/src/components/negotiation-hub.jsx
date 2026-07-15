@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Edit3, Check, Copy, ArrowRightLeft, ShieldAlert } from "lucide-react";
+import { Edit3, Check, Copy, ArrowRightLeft } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -29,21 +29,21 @@ export default function NegotiationHub({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+        <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
           <ArrowRightLeft className="w-3.5 h-3.5 text-indigo-400" />
           Negotiation Suggestions ({negotiations.length})
         </h3>
       </div>
 
       {negotiations.length > 0 ? (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {negotiations.map((item, index) => {
             const isApplied = appliedIndices.has(index);
 
             return (
               <Card 
                 key={index} 
-                className="glass-panel border-slate-800/80 hover:border-slate-700/40 transition-all duration-200 overflow-hidden relative"
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-500/20 shadow-sm rounded-xl overflow-hidden relative transition-all duration-200"
               >
                 {/* Visual indicator if applied */}
                 {isApplied && (
@@ -55,7 +55,7 @@ export default function NegotiationHub({
                   {/* Explanatory benefit */}
                   <div className="flex gap-2">
                     <Edit3 className="w-3.5 h-3.5 text-indigo-400 mt-0.5 shrink-0" />
-                    <p className="text-sm text-slate-200 leading-relaxed font-medium">
+                    <p className="text-sm text-slate-900 dark:text-slate-100 leading-relaxed font-medium">
                       {item.explanation}
                     </p>
                   </div>
@@ -64,32 +64,32 @@ export default function NegotiationHub({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     
                     {/* Original Clause */}
-                    <div className="bg-rose-950/10 border border-rose-900/30 rounded-lg p-3 space-y-1.5">
-                      <span className="text-[9px] font-bold text-rose-400 uppercase tracking-widest block">Original Wording</span>
-                      <p className="text-xs text-slate-300 leading-relaxed italic">
+                    <div className="bg-rose-50/50 dark:bg-rose-950/10 border border-rose-200 dark:border-rose-900/30 rounded-lg p-3 space-y-1.5">
+                      <span className="text-[9px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-widest block font-sans">Original Wording</span>
+                      <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed italic">
                         "{item.triggerText}"
                       </p>
                     </div>
 
                     {/* Proposed Wording */}
-                    <div className="bg-emerald-950/15 border border-emerald-900/40 rounded-lg p-3 space-y-1.5 relative group">
-                      <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest block">Proposed Balanced Wording</span>
-                      <p className="text-xs text-slate-300 leading-relaxed">
+                    <div className="bg-emerald-50/50 dark:bg-emerald-950/15 border border-emerald-200 dark:border-emerald-900/40 rounded-lg p-3 space-y-1.5 relative group">
+                      <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block font-sans">Proposed Balanced Wording</span>
+                      <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
                         {item.proposedWording}
                       </p>
                     </div>
                   </div>
 
                   {/* Action buttons */}
-                  <div className="flex justify-end items-center gap-2 pt-1 border-t border-slate-900/50">
+                  <div className="flex justify-end items-center gap-2 pt-1 border-t border-slate-200 dark:border-slate-800">
                     <Button
                       variant="outline"
                       onClick={() => copyToClipboard(item.proposedWording, index)}
-                      className="bg-slate-950/60 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-900 h-8 text-[11px] rounded"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 h-8 text-[11px] rounded px-3"
                     >
                       {copiedIndex === index ? (
                         <>
-                          <Check className="w-3.5 h-3.5 text-emerald-400 mr-1" />
+                          <Check className="w-3.5 h-3.5 text-emerald-500 mr-1" />
                           Copied
                         </>
                       ) : (
@@ -105,7 +105,7 @@ export default function NegotiationHub({
                       onClick={() => handleApply(item.triggerText, item.proposedWording, index)}
                       className={`h-8 text-[11px] rounded font-semibold transition-all duration-300 ${
                         isApplied 
-                          ? "bg-emerald-950/20 text-emerald-400 border border-emerald-800/20" 
+                          ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/40"
                           : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/10"
                       }`}
                     >

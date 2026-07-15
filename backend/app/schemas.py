@@ -35,6 +35,7 @@ class ContractResponse(BaseModel):
     title: str
     s3_key: str
     created_at: datetime
+    raw_text: Optional[str] = None
 
     class Config:
         from_attributes = True

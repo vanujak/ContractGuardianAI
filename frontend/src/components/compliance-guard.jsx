@@ -70,20 +70,20 @@ export default function ComplianceGuard({
     switch (status) {
       case "Compliant":
         return (
-          <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-950/30 border border-emerald-800/40 px-2 py-0.5 rounded-full uppercase tracking-wider">
-            <CheckCircle className="w-3 h-3" /> Compliant
+          <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 px-2 py-0.5 rounded-full uppercase tracking-wider">
+            <CheckCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> Compliant
           </span>
         );
       case "Warning":
         return (
-          <span className="flex items-center gap-1 text-[10px] font-bold text-amber-400 bg-amber-950/30 border border-amber-800/40 px-2 py-0.5 rounded-full uppercase tracking-wider">
-            <AlertTriangle className="w-3 h-3" /> Warning
+          <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 px-2 py-0.5 rounded-full uppercase tracking-wider">
+            <AlertTriangle className="w-3 h-3 text-amber-600 dark:text-amber-400" /> Warning
           </span>
         );
       default:
         return (
-          <span className="flex items-center gap-1 text-[10px] font-bold text-rose-400 bg-rose-950/30 border border-rose-800/40 px-2 py-0.5 rounded-full uppercase tracking-wider">
-            <XCircle className="w-3 h-3" /> Critical
+          <span className="flex items-center gap-1 text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/40 px-2 py-0.5 rounded-full uppercase tracking-wider">
+            <XCircle className="w-3 h-3 text-rose-600 dark:text-rose-400" /> Critical
           </span>
         );
     }
@@ -92,10 +92,10 @@ export default function ComplianceGuard({
   return (
     <div className="space-y-4">
       {/* Control panel */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-950/40 border border-slate-900 p-3 rounded-lg">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-800 p-3 rounded-lg">
         <div className="flex items-center gap-2">
           <MapPin className="w-4 h-4 text-indigo-400" />
-          <span className="text-xs font-semibold text-slate-300">Target Legal Jurisdiction:</span>
+          <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Target Legal Jurisdiction:</span>
         </div>
 
         <div className="flex gap-2">
@@ -107,10 +107,10 @@ export default function ComplianceGuard({
             }}
             disabled={loading}
           >
-            <SelectTrigger className="w-[220px] bg-slate-900 border-slate-800 text-slate-200 h-8 rounded text-xs">
+            <SelectTrigger className="w-[220px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 h-8 rounded text-xs">
               <SelectValue placeholder="Select Country" />
             </SelectTrigger>
-            <SelectContent className="bg-slate-950 border-slate-800 text-slate-200 text-xs">
+            <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-xs">
               {REGIONS.map((r) => (
                 <SelectItem key={r.id} value={r.id} className="cursor-pointer">
                   {r.label}
@@ -124,7 +124,7 @@ export default function ComplianceGuard({
             variant="outline"
             onClick={() => fetchCompliance(region)}
             disabled={loading}
-            className="w-8 h-8 border-slate-800 bg-slate-900/60 hover:bg-slate-900 text-slate-400 hover:text-white"
+            className="w-8 h-8 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
           </Button>
@@ -135,29 +135,29 @@ export default function ComplianceGuard({
       {loading ? (
         <div className="flex flex-col items-center justify-center py-16 text-slate-400 gap-2">
           <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
-          <span className="text-xs">Running regional compliance scan...</span>
+          <span className="text-sm">Running regional compliance scan...</span>
         </div>
       ) : error ? (
-        <div className="glass-panel border-rose-900/50 p-6 text-center text-rose-400 text-xs rounded-xl">
+        <div className="bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/50 p-6 text-center text-rose-600 dark:text-rose-400 text-sm rounded-xl">
           Error: {error}
         </div>
       ) : report ? (
         <div className="space-y-4">
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {report.report.map((item, index) => (
-              <Card key={index} className="glass-panel border-slate-800/80">
-                <CardContent className="p-4 space-y-3">
+              <Card key={index} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden">
+                <CardContent className="p-5 space-y-3">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-bold text-slate-200">{item.area}</span>
+                    <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{item.area}</span>
                     {getStatusBadge(item.status)}
                   </div>
                   
-                  <p className="text-xs text-slate-300 leading-relaxed">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
                     {item.description}
                   </p>
 
-                  <div className="bg-slate-950/60 border border-slate-900/80 p-2.5 rounded text-[11px] text-slate-400">
-                    <strong className="text-indigo-400 font-semibold uppercase tracking-wider text-[9px] block mb-0.5">Recommendation:</strong>
+                  <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 p-2.5 rounded text-sm text-slate-800 dark:text-slate-200">
+                    <strong className="text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wider text-[9px] block mb-0.5">Recommendation:</strong>
                     {item.recommendation}
                   </div>
                 </CardContent>
@@ -166,15 +166,15 @@ export default function ComplianceGuard({
           </div>
 
           {/* Legal Disclaimer */}
-          <div className="border border-amber-900/30 bg-amber-950/5 rounded-lg p-3 flex gap-2.5">
+          <div className="border border-amber-200 dark:border-amber-900/30 bg-amber-50 dark:bg-amber-950/5 rounded-lg p-3 flex gap-2.5">
             <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-            <p className="text-[10px] leading-relaxed text-amber-400/90 font-medium">
+            <p className="text-xs leading-relaxed text-amber-700 dark:text-amber-400/90 font-medium">
               {report.disclaimer || "Disclaimer: This compliance check is performed by AI for informational purposes only. It does not constitute formal legal counsel. For contract execution, please verify terms with a certified lawyer."}
             </p>
           </div>
         </div>
       ) : (
-        <div className="text-center py-10 text-slate-500 text-xs">
+        <div className="text-center py-10 text-slate-500 text-sm">
           Select a jurisdiction to audit this contract.
         </div>
       )}

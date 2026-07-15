@@ -64,28 +64,35 @@ def analyze_contract_with_gemini(text: str, persona: str) -> Dict[str, Any]:
 def chat_with_gemini(text: str, question: str, persona: str, history: List[Dict[str, str]] = None) -> str:
     """
     Answers a question about the contract text from the perspective of the persona.
+    Uses local TF-IDF RAG to slice contract and retrieve top matching paragraphs.
     """
+    from app.services.rag import get_relevant_chunks
+
     client = get_gemini_client()
     if not client:
         return get_mock_chat_response(text, question, persona)
+
+    # 1. Retrieve the top 3 relevant paragraphs
+    relevant_chunks = get_relevant_chunks(text, question, top_k=3)
+    context_text = "\n\n".join(relevant_chunks) if relevant_chunks else text
 
     history_prompt = ""
     if history:
         history_prompt = "Conversation History:\n" + "\n".join([f"{h['role']}: {h['message']}" for h in history]) + "\n\n"
 
     prompt = f"""
-    You are an AI Contract Assistant. Answer the user's question about the contract text.
+    You are an AI Contract Assistant. Answer the user's question about the contract based ON THE PROVIDED RELEVANT EXCERPTS.
     You must adopt the lens and advocate for the perspective of a **{persona}**.
     
     {history_prompt}
-    Contract text:
+    Relevant Contract Excerpts:
     ---
-    {text}
+    {context_text}
     ---
     
     User question: {question}
     
-    Keep your answer concise, accurate, and highly relevant to the contract text. Do not make up facts. Reference specific parts of the contract when answering.
+    Keep your answer concise, accurate, and highly relevant to the provided excerpts. Do not make up facts. Reference specific terms in the excerpts when answering.
     """
     
     try:
@@ -100,27 +107,56 @@ def chat_with_gemini(text: str, question: str, persona: str, history: List[Dict[
 
 def compare_contracts_with_gemini(text_a: str, text_b: str) -> Dict[str, Any]:
     """
-    Compares two contracts side by side.
+    Compares two contracts side-by-side.
+    Uses local RAG to retrieve matching snippets for key parameters from both contracts
+    to reduce token counts and prevent prompt context overflow.
     """
+    from app.services.rag import get_relevant_chunks
+
     client = get_gemini_client()
     if not client:
         return get_mock_comparison_data(text_a, text_b)
 
+    comparison_parameters = {
+        "Compensation & Fees": "salary compensation monthly payment fee rate invoice billing",
+        "Notice Period & Termination": "termination terminate notice period quit fire at-will",
+        "Liability Caps": "liability cap limit damage indemnity indemnify hold harmless",
+        "Intellectual Property Ownership": "intellectual property ip software code ownership patent copyright feedback assignment",
+        "Governing Law & Disputes": "governing law dispute jurisdiction court arbitration delaware state country region"
+    }
+
+    compiled_context = []
+    for param_name, search_query in comparison_parameters.items():
+        # Query Contract A
+        chunks_a = get_relevant_chunks(text_a, search_query, top_k=1)
+        snippet_a = chunks_a[0] if chunks_a else "No matching clause found."
+        
+        # Query Contract B
+        chunks_b = get_relevant_chunks(text_b, search_query, top_k=1)
+        snippet_b = chunks_b[0] if chunks_b else "No matching clause found."
+        
+        compiled_context.append(f"""
+PARAMETER: {param_name}
+- Contract A Clause Wording: "{snippet_a}"
+- Contract B Clause Wording: "{snippet_b}"
+""")
+
+    context_text = "\n".join(compiled_context)
+
     prompt = f"""
-    Compare the following two contracts side-by-side. 
-    Analyze key parameters like Compensation/Fees, Notice Period for Termination, Liability Caps, IP Ownership, and General Balance.
+    Compare the two contracts side-by-side based ON THE PROVIDED RELEVANT EXCERPTS for each key parameter.
     
-    Contract A:
+    EXCERPTS:
     ---
-    {text_a}
-    ---
-    
-    Contract B:
-    ---
-    {text_b}
+    {context_text}
     ---
     
-    Return a structured JSON object matching the comparison schema.
+    Generate a side-by-side comparison matrix. For each parameter (Compensation/Fees, Notice Period, Liability Caps, IP Ownership, Governing Law/Disputes), analyze:
+    1. The core value/terms in Contract A
+    2. The core value/terms in Contract B
+    3. AI comparison assessment notes summarizing the differences and balance.
+    
+    Return a structured JSON object matching the CompareResponse schema.
     """
     
     try:
@@ -141,21 +177,29 @@ def compare_contracts_with_gemini(text_a: str, text_b: str) -> Dict[str, Any]:
 def check_compliance_with_gemini(text: str, region: str) -> Dict[str, Any]:
     """
     Audits a contract for regional compliance (US, UK, India, Sri Lanka).
+    Uses local RAG to retrieve compliance-critical paragraphs first.
     """
+    from app.services.rag import get_relevant_chunks
+
     client = get_gemini_client()
     if not client:
         return get_mock_compliance_data(text, region)
 
+    # Retrieve compliance-critical sections
+    compliance_keywords = "termination notice working hours salary taxes liability consumer protection dispute governing law"
+    relevant_chunks = get_relevant_chunks(text, compliance_keywords, top_k=5)
+    context_text = "\n\n".join(relevant_chunks) if relevant_chunks else text
+
     prompt = f"""
-    Analyze the compliance of the following contract under the laws of **{region}**.
-    Cover areas like Employment laws, Consumer Protection rights, local Taxation compliance, and general business regulations.
+    Analyze the compliance of the following contract excerpts under the laws of **{region}**.
+    Focus on compliance parameters like Employment standards (notice periods/hours), Consumer Protection rights, local Taxation requirements, and Governing Law.
     
-    Contract text:
+    Contract excerpts:
     ---
-    {text}
+    {context_text}
     ---
     
-    Return a structured JSON object matching the compliance schema. Always include a disclaimer stating that this is for informational purposes only.
+    Return a structured JSON object matching the ComplianceResponse schema. Always include a disclaimer stating that this is for informational purposes only.
     """
     
     try:

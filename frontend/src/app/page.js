@@ -4,14 +4,11 @@ import React, { useState, useEffect } from "react";
 import { 
   Upload, 
   FileText, 
-  HelpCircle, 
-  RefreshCw, 
   ChevronRight, 
   Sparkles, 
   ArrowLeft, 
   AlertCircle,
-  FileCheck2,
-  FileCode
+  FileCheck2
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -57,15 +54,19 @@ const PRELOADED_Demos = [
 ];
 
 export default function Home() {
+  // Set this to true to boot directly into the workspace with mock data for UI polishing.
+  // Set to false for the production upload flow.
+  const DEV_DIRECT_WORKSPACE = true;
+
   // Navigation Screens: "landing" | "processing" | "workspace"
-  const [screen, setScreen] = useState("landing");
+  const [screen, setScreen] = useState(DEV_DIRECT_WORKSPACE ? "workspace" : "landing");
   const [loadingText, setLoadingText] = useState("Reading contract document...");
   
   // Workspace Session State
-  const [activeContract, setActiveContract] = useState(null);
+  const [activeContract, setActiveContract] = useState(DEV_DIRECT_WORKSPACE ? MOCK_CONTRACTS.employment : null);
   const [currentPersona, setCurrentPersona] = useState("Employee");
-  const [analysisData, setAnalysisData] = useState(null);
-  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [analysisData, setAnalysisData] = useState(DEV_DIRECT_WORKSPACE ? MOCK_ANALYSES.employment.Employee : null);
+  const [isDemoMode, setIsDemoMode] = useState(DEV_DIRECT_WORKSPACE ? true : false);
   const [activeTab, setActiveTab] = useState("health");
   
   // Highlight / Scroll Syncer
@@ -375,14 +376,14 @@ export default function Home() {
           
           {/* Header Title */}
           <div className="text-center space-y-4 max-w-2xl mb-12 mt-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-950/40 border border-indigo-900/60 text-xs font-semibold text-indigo-400">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
               <Sparkles className="w-3.5 h-3.5" />
               Contract Guardian AI Workspace
             </div>
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
               Understand, analyze, and <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent">improve contracts</span> with AI.
             </h1>
-            <p className="text-base text-slate-600 dark:text-slate-350 leading-relaxed max-w-xl mx-auto">
+            <p className="text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl mx-auto">
               An advanced workspace that reviews agreements from your specific persona's perspective, audits regional laws, and helps you draft fairer terms.
             </p>
           </div>
@@ -397,14 +398,14 @@ export default function Home() {
               className={`glass-panel rounded-2xl border-2 border-dashed p-10 text-center flex flex-col items-center justify-center transition-all duration-300 relative ${
                 dragActive 
                   ? "border-indigo-500 bg-indigo-950/15 shadow-indigo-950/20 shadow-2xl" 
-                  : "border-slate-350 dark:border-slate-800 bg-slate-100/10 dark:bg-slate-900/10 hover:border-indigo-500/50"
+                  : "border-slate-300 dark:border-slate-800 bg-slate-100/10 dark:bg-slate-900/10 hover:border-indigo-500/50"
               }`}
             >
               <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-900/60 flex items-center justify-center mb-4 text-indigo-400">
                 <Upload className="w-6 h-6 stroke-1.5" />
               </div>
               <div className="space-y-1.5 mb-6">
-                <h3 className="text-sm font-bold text-slate-850 dark:text-slate-200">Drag & Drop Contract File</h3>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-200">Drag & Drop Contract File</h3>
                 <p className="text-sm text-slate-500 dark:text-slate-300 max-w-[280px]">
                   Supports PDF or TXT files. Maximum size 10MB.
                 </p>
@@ -425,7 +426,7 @@ export default function Home() {
               </label>
 
               {uploadError && (
-                <div className="mt-4 flex items-center gap-1.5 text-xs text-rose-450 bg-rose-950/20 border border-rose-900/40 px-3 py-1.5 rounded-lg">
+                <div className="mt-4 flex items-center gap-1.5 text-xs text-rose-500 bg-rose-950/20 border border-rose-900/40 px-3 py-1.5 rounded-lg">
                   <AlertCircle className="w-3.5 h-3.5" />
                   <span>{uploadError}</span>
                 </div>
@@ -468,13 +469,24 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Footer API Key Notice */}
-          <div className="mt-16 flex items-center gap-2 text-[10px] text-slate-500 bg-slate-950/20 border border-slate-900 px-4 py-2 rounded-full">
-            <FileCode className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Secure integration: API Keys are parsed on the server via `.env` file variables.</span>
-          </div>
-
         </div>
+
+        {/* Landing Page Footer */}
+        <footer className="w-full bg-card/30 border-t border-border/80 py-6 px-6 shrink-0 mt-12">
+          <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
+            <div className="space-y-1">
+              <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1 justify-center md:justify-start">
+                Contract Guardian <span className="bg-indigo-600 text-[9px] font-bold text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider">AI</span>
+              </span>
+              <p className="text-[10px] text-slate-500 dark:text-slate-500">
+                © 2026 Contract Guardian AI. All rights reserved.
+              </p>
+            </div>
+            <p className="text-[10px] text-slate-500 dark:text-slate-500 max-w-lg leading-relaxed text-center md:text-right">
+              Disclaimer: Contract Guardian AI uses artificial intelligence to analyze documents and draft suggestions. It is not a law firm and does not provide formal legal counsel or represent legal representation. Use of this tool is for educational and reference purposes only.
+            </p>
+          </div>
+        </footer>
       </div>
       )}
 
@@ -500,141 +512,156 @@ export default function Home() {
 
       {/* WORKSPACE VIEW (SPLIT-SCREEN) */}
       {screen === "workspace" && (
-        <div className="flex-1 flex flex-col h-screen overflow-hidden">
+        <div className="fixed inset-0 z-50 flex h-dvh flex-col overflow-hidden bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-slate-50">
           
           {/* Workspace Header */}
-          <header className="px-6 py-3 bg-card border-b border-border flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => setScreen("landing")}
-                className="p-1.5 rounded bg-slate-900 border border-slate-800 text-slate-450 hover:text-white transition-colors"
-                title="Back to Upload"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-              </button>
-              
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-extrabold tracking-tight text-white flex items-center gap-1">
-                  Contract Guardian <span className="bg-indigo-600 text-[9px] font-bold text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider">AI</span>
-                </span>
-                <span className="text-slate-500">/</span>
-                <span className="text-xs text-slate-350 max-w-[200px] truncate" title={activeContract?.title}>
-                  {activeContract?.title}
-                </span>
-              </div>
-            </div>
+          <header className="z-20 shrink-0 border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900 lg:px-6">
+            <div className="flex min-h-9 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-center gap-3">
+                <button
+                  onClick={() => setScreen("landing")}
+                  className="p-1.5 rounded bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+                  title="Back to Upload"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                </button>
 
-            {/* Controls: Theme & Persona */}
-            <div className="flex items-center gap-3">
-              <ThemeSelector />
-              <PersonaSelector
-                currentPersona={currentPersona}
-                onChange={handlePersonaChange}
-                disabled={false}
-              />
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="shrink-0 text-sm font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-1">
+                    Contract Guardian <span className="bg-indigo-600 text-[9px] font-bold text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider">AI</span>
+                  </span>
+                  <span className="shrink-0 text-slate-500">/</span>
+                  <span className="min-w-0 truncate text-xs text-slate-700 dark:text-slate-300 sm:max-w-[220px] font-medium" title={activeContract?.title}>
+                    {activeContract?.title}
+                  </span>
+                </div>
+              </div>
+
+              {/* Controls: Theme & Persona */}
+              <div className="flex w-full flex-wrap items-center justify-between gap-3 sm:w-auto sm:justify-end">
+                <ThemeSelector />
+                <PersonaSelector
+                  currentPersona={currentPersona}
+                  onChange={handlePersonaChange}
+                  disabled={false}
+                />
+              </div>
             </div>
           </header>
 
-          {/* Workspace Layout Workspace grid */}
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden bg-background">
+          {/* Workspace Layout */}
+          <div className="flex-1 min-h-0 overflow-hidden bg-slate-50 dark:bg-slate-950">
             
-            {/* Left Pane: Document Viewer */}
-            <div className="lg:col-span-6 p-4 overflow-hidden border-r border-slate-900/60 flex flex-col">
-              <DocumentViewer
-                rawText={activeContract?.raw_text}
-                highlightText={highlightText}
-                highlightSeverity={highlightSeverity}
-                onSaveEdit={handleApplyRevision}
-              />
-            </div>
+            <div className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)_minmax(0,42dvh)] gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(340px,480px)] lg:grid-rows-1 lg:p-6 xl:grid-cols-[minmax(0,1fr)_minmax(380px,520px)] xl:gap-6">
+              {/* Analysis Tabs */}
+              <section className="flex min-h-0 min-w-0 flex-col overflow-hidden">
+                <Tabs
+                  value={activeTab}
+                  onValueChange={setActiveTab}
+                  className="min-h-0 flex-1 overflow-hidden"
+                >
+                  {/* Tabs Headers */}
+                  <TabsList className="mb-4 flex h-auto w-full shrink-0 flex-wrap rounded-lg border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-800 dark:bg-slate-800/80 sm:h-10 sm:flex-nowrap">
+                    <TabsTrigger value="health" className="min-w-[92px] flex-1 cursor-pointer rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wider text-slate-500 data-active:bg-white data-active:text-slate-900 dark:text-slate-400 dark:data-active:bg-slate-900 dark:data-active:text-slate-100 sm:px-3 sm:py-1.5">
+                      Dashboard
+                    </TabsTrigger>
+                    <TabsTrigger value="radar" className="min-w-[92px] flex-1 cursor-pointer rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wider text-slate-500 data-active:bg-white data-active:text-slate-900 dark:text-slate-400 dark:data-active:bg-slate-900 dark:data-active:text-slate-100 sm:px-3 sm:py-1.5">
+                      Risks
+                    </TabsTrigger>
+                    <TabsTrigger value="negotiation" className="min-w-[92px] flex-1 cursor-pointer rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wider text-slate-500 data-active:bg-white data-active:text-slate-900 dark:text-slate-400 dark:data-active:bg-slate-900 dark:data-active:text-slate-100 sm:px-3 sm:py-1.5">
+                      Negotiate
+                    </TabsTrigger>
+                    <TabsTrigger value="compliance" className="min-w-[92px] flex-1 cursor-pointer rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wider text-slate-500 data-active:bg-white data-active:text-slate-900 dark:text-slate-400 dark:data-active:bg-slate-900 dark:data-active:text-slate-100 sm:px-3 sm:py-1.5">
+                      Compliance
+                    </TabsTrigger>
+                    <TabsTrigger value="chat" className="min-w-[92px] flex-1 cursor-pointer rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wider text-slate-500 data-active:bg-white data-active:text-slate-900 dark:text-slate-400 dark:data-active:bg-slate-900 dark:data-active:text-slate-100 sm:px-3 sm:py-1.5">
+                      Chat
+                    </TabsTrigger>
+                    <TabsTrigger value="compare" className="min-w-[92px] flex-1 cursor-pointer rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wider text-slate-500 data-active:bg-white data-active:text-slate-900 dark:text-slate-400 dark:data-active:bg-slate-900 dark:data-active:text-slate-100 sm:px-3 sm:py-1.5">
+                      Compare
+                    </TabsTrigger>
+                  </TabsList>
 
-            {/* Right Pane: Analysis Tabs */}
-            <div className="lg:col-span-6 p-4 overflow-hidden flex flex-col">
-              <Tabs 
-                value={activeTab} 
-                onValueChange={setActiveTab}
-                className="flex-1 flex flex-col overflow-hidden"
-              >
-                {/* Tabs Headers */}
-                <TabsList className="bg-slate-950/60 border border-slate-900 p-0.5 rounded-lg shrink-0 mb-4 grid grid-cols-6 h-9">
-                  <TabsTrigger value="health" className="text-[10px] font-semibold uppercase tracking-wider rounded-md py-1.5 cursor-pointer">
-                    Dashboard
-                  </TabsTrigger>
-                  <TabsTrigger value="radar" className="text-[10px] font-semibold uppercase tracking-wider rounded-md py-1.5 cursor-pointer">
-                    Risks
-                  </TabsTrigger>
-                  <TabsTrigger value="negotiation" className="text-[10px] font-semibold uppercase tracking-wider rounded-md py-1.5 cursor-pointer">
-                    Negotiate
-                  </TabsTrigger>
-                  <TabsTrigger value="compliance" className="text-[10px] font-semibold uppercase tracking-wider rounded-md py-1.5 cursor-pointer">
-                    Compliance
-                  </TabsTrigger>
-                  <TabsTrigger value="chat" className="text-[10px] font-semibold uppercase tracking-wider rounded-md py-1.5 cursor-pointer">
-                    Chat
-                  </TabsTrigger>
-                  <TabsTrigger value="compare" className="text-[10px] font-semibold uppercase tracking-wider rounded-md py-1.5 cursor-pointer">
-                    Compare
-                  </TabsTrigger>
-                </TabsList>
+                  {/* Tabs Body Contents */}
+                  <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable]">
 
-                {/* Tabs Body Contents */}
-                <div className="flex-1 overflow-y-auto pr-1">
-                  
-                  {/* Dashboard Tab */}
-                  <TabsContent value="health" className="m-0 focus-visible:outline-none">
-                    <HealthDashboard
-                      analysis={analysisData}
-                      onNavigateTab={handleNavigateTab}
-                    />
-                  </TabsContent>
+                    {/* Dashboard Tab */}
+                    <TabsContent value="health" className="m-0 focus-visible:outline-none">
+                      <HealthDashboard
+                        analysis={analysisData}
+                        onNavigateTab={handleNavigateTab}
+                      />
+                    </TabsContent>
 
-                  {/* Risks Tab */}
-                  <TabsContent value="radar" className="m-0 focus-visible:outline-none">
-                    <RiskRadar
-                      analysis={analysisData}
-                      onHighlightTrigger={handleHighlightTrigger}
-                      onApplyBoilerplate={handleApplyBoilerplate}
-                    />
-                  </TabsContent>
+                    {/* Risks Tab */}
+                    <TabsContent value="radar" className="m-0 focus-visible:outline-none">
+                      <RiskRadar
+                        analysis={analysisData}
+                        onHighlightTrigger={handleHighlightTrigger}
+                        onApplyBoilerplate={handleApplyBoilerplate}
+                      />
+                    </TabsContent>
 
-                  {/* Negotiation Tab */}
-                  <TabsContent value="negotiation" className="m-0 focus-visible:outline-none">
-                    <NegotiationHub
-                      analysis={analysisData}
-                      onApplyRevision={handleApplyRevision}
-                    />
-                  </TabsContent>
+                    {/* Negotiation Tab */}
+                    <TabsContent value="negotiation" className="m-0 focus-visible:outline-none">
+                      <NegotiationHub
+                        analysis={analysisData}
+                        onApplyRevision={handleApplyRevision}
+                      />
+                    </TabsContent>
 
-                  {/* Compliance Tab */}
-                  <TabsContent value="compliance" className="m-0 focus-visible:outline-none">
-                    <ComplianceGuard
-                      contractId={activeContract?.id}
-                      isDemoMode={isDemoMode}
-                      demoComplianceData={demoComplianceMock}
-                    />
-                  </TabsContent>
+                    {/* Compliance Tab */}
+                    <TabsContent value="compliance" className="m-0 focus-visible:outline-none">
+                      <ComplianceGuard
+                        contractId={activeContract?.id}
+                        isDemoMode={isDemoMode}
+                        demoComplianceData={demoComplianceMock}
+                      />
+                    </TabsContent>
 
-                  {/* Chat Tab */}
-                  <TabsContent value="chat" className="m-0 focus-visible:outline-none">
-                    <ChatAssistant
-                      contractId={activeContract?.id}
-                      persona={currentPersona}
-                      isDemoMode={isDemoMode}
-                      demoChatMock={demoChatMock}
-                    />
-                  </TabsContent>
+                    {/* Chat Tab */}
+                    <TabsContent value="chat" className="m-0 focus-visible:outline-none">
+                      <ChatAssistant
+                        contractId={activeContract?.id}
+                        persona={currentPersona}
+                        isDemoMode={isDemoMode}
+                        demoChatMock={demoChatMock}
+                      />
+                    </TabsContent>
 
-                  {/* Compare Tab */}
-                  <TabsContent value="compare" className="m-0 focus-visible:outline-none">
-                    <CompareContracts
-                      contractA={activeContract}
-                      isDemoMode={isDemoMode}
-                      demoCompareData={demoCompareData}
-                    />
-                  </TabsContent>
+                    {/* Compare Tab */}
+                    <TabsContent value="compare" className="m-0 focus-visible:outline-none">
+                      <CompareContracts
+                        contractA={activeContract}
+                        isDemoMode={isDemoMode}
+                        demoCompareData={demoCompareData}
+                      />
+                    </TabsContent>
 
-                </div>
-              </Tabs>
+                  </div>
+                </Tabs>
+              </section>
+
+              {/* Contract Viewer */}
+              <aside className="min-h-0 min-w-0 overflow-hidden">
+                <DocumentViewer
+                  rawText={activeContract?.raw_text || ""}
+                  highlightText={highlightText}
+                  highlightSeverity={highlightSeverity}
+                  onSaveEdit={async (updatedText) => {
+                    const updatedContract = { ...activeContract, raw_text: updatedText };
+                    setActiveContract(updatedContract);
+
+                    if (!isDemoMode && activeContract?.id) {
+                      try {
+                        await api.editContractText(activeContract.id, updatedText);
+                      } catch (e) {
+                        console.error("Failed to save edited draft", e);
+                      }
+                    }
+                  }}
+                />
+              </aside>
             </div>
 
           </div>

@@ -7,7 +7,6 @@ import {
   UserCheck, 
   Cpu, 
   Coins, 
-  ShieldAlert,
   Scale
 } from "lucide-react";
 import {

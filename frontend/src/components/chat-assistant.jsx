@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Loader2, Sparkles, MessageSquare } from "lucide-react";
+import { Send, Bot, User, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -106,7 +106,7 @@ export default function ChatAssistant({
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-230px)] max-h-[600px] border border-border rounded-xl overflow-hidden bg-card/25">
+    <div className="flex h-full min-h-[420px] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
       
       {/* Chat Messages */}
       <ScrollArea className="flex-1 p-4">
@@ -124,7 +124,7 @@ export default function ChatAssistant({
                 <div
                   className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 border ${
                     isAI
-                      ? "bg-slate-900 border-slate-800 text-indigo-400"
+                      ? "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-indigo-500"
                       : "bg-indigo-600 border-indigo-500 text-white"
                   }`}
                 >
@@ -135,8 +135,8 @@ export default function ChatAssistant({
                 <div
                   className={`p-3 rounded-lg text-sm leading-relaxed ${
                     isAI
-                      ? "bg-slate-900/60 border border-slate-900/80 text-slate-200 rounded-tl-none"
-                      : "bg-indigo-600/10 border border-indigo-500/20 text-slate-100 rounded-tr-none"
+                      ? "bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-tl-none"
+                      : "bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 text-indigo-950 dark:text-slate-100 rounded-tr-none"
                   }`}
                 >
                   <p 
@@ -150,10 +150,10 @@ export default function ChatAssistant({
           
           {loading && (
             <div className="flex gap-3 max-w-[80%] self-start">
-              <div className="w-7 h-7 rounded-full bg-slate-900 border border-slate-800 text-indigo-400 flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-indigo-500 flex items-center justify-center shrink-0">
                 <Bot className="w-4 h-4" />
               </div>
-              <div className="bg-slate-900/40 border border-slate-900/80 text-slate-400 p-3 rounded-lg rounded-tl-none flex items-center gap-2 text-sm">
+              <div className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 p-3 rounded-lg rounded-tl-none flex items-center gap-2 text-sm">
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" />
                 Thinking...
               </div>
@@ -165,7 +165,7 @@ export default function ChatAssistant({
 
       {/* Suggested Questions Pills */}
       {messages.length === 1 && (
-        <div className="px-4 py-2 border-t border-border bg-muted/40 space-y-1.5">
+        <div className="px-4 py-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 space-y-1.5">
           <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest flex items-center gap-1">
             <Sparkles className="w-2.5 h-2.5 text-indigo-400" /> Suggested Questions:
           </span>
@@ -175,7 +175,7 @@ export default function ChatAssistant({
                 key={idx}
                 onClick={() => handleSend(q)}
                 disabled={loading}
-                className="text-[10px] text-slate-400 hover:text-white bg-slate-900 border border-slate-800 hover:border-slate-700/80 px-2 py-1 rounded transition-all disabled:opacity-50"
+                className="text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 px-2 py-1 rounded transition-all disabled:opacity-50"
               >
                 {q}
               </button>
@@ -190,14 +190,14 @@ export default function ChatAssistant({
           e.preventDefault();
           handleSend();
         }}
-        className="p-3 bg-card border-t border-border flex gap-2"
+        className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex gap-2"
       >
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask a question about this contract..."
           disabled={loading}
-          className="flex-1 bg-slate-900/50 border-slate-800 focus-visible:ring-indigo-500 text-slate-200 h-9 rounded text-xs"
+          className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus-visible:ring-indigo-500 text-slate-900 dark:text-slate-100 h-9 rounded text-sm"
         />
         <Button
           type="submit"
