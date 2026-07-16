@@ -28,7 +28,7 @@ def query_contract_chat(contract_id: str, request: ChatRequest, db: Session = De
     user_msg = ChatMessage(
         contract_id=contract_id,
         role="user",
-        message=request.question
+        message=request.question.replace('\x00', '')
     )
     db.add(user_msg)
     
@@ -44,7 +44,7 @@ def query_contract_chat(contract_id: str, request: ChatRequest, db: Session = De
     assistant_msg = ChatMessage(
         contract_id=contract_id,
         role="assistant",
-        message=answer
+        message=answer.replace('\x00', '')
     )
     db.add(assistant_msg)
     db.commit()

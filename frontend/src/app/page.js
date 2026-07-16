@@ -59,7 +59,7 @@ const MAX_REANALYSES_PER_SESSION = 5;
 export default function Home() {
   // Set this to true to boot directly into the workspace with mock data for UI polishing.
   // Set to false for the production upload flow.
-  const DEV_DIRECT_WORKSPACE = true;
+  const DEV_DIRECT_WORKSPACE = false;
 
   // Navigation Screens: "landing" | "processing" | "workspace"
   const [screen, setScreen] = useState(
@@ -197,7 +197,7 @@ export default function Home() {
       // 2. Fetch analyze API
       const analysis = await api.analyzeContract(contract.id, guessedPersona);
       setAnalysisData(analysis);
-      
+
       setScreen("workspace");
       setActiveTab("health");
       setHighlightText("");
@@ -635,7 +635,9 @@ export default function Home() {
                   size="sm"
                   onClick={() => setIsEditorVisible((visible) => !visible)}
                   className="h-9 rounded-md border border-slate-200 bg-white/80 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300 dark:hover:bg-slate-800"
-                  title={isEditorVisible ? "Hide live editor" : "Show live editor"}
+                  title={
+                    isEditorVisible ? "Hide live editor" : "Show live editor"
+                  }
                 >
                   {isEditorVisible ? (
                     <PanelRightClose className="mr-1.5 h-3.5 w-3.5" />
@@ -764,7 +766,6 @@ export default function Home() {
                         demoChatMock={demoChatMock}
                       />
                     </TabsContent>
-
                   </div>
                 </Tabs>
               </section>

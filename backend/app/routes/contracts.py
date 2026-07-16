@@ -74,7 +74,7 @@ def edit_contract_text(contract_id: str, request: EditContractRequest, db: Sessi
         raise HTTPException(status_code=404, detail="Contract not found")
     
     try:
-        contract.raw_text = request.raw_text
+        contract.raw_text = request.raw_text.replace('\x00', '')
         
         # Clear existing analysis cache as the contract text is now updated
         db.query(Analysis).filter(Analysis.contract_id == contract_id).delete()
