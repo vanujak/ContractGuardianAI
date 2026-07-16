@@ -30,6 +30,8 @@ __pycache__/
 *.sqlite
 backend/local_storage/
 backend/.env
+# Root-level docker-compose secrets (copied from .env.example)
+.env
 
 # IDEs & System
 .DS_Store

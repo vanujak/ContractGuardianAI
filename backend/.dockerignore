@@ -1,0 +1,31 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Local storage (mounted as volume)
+local_storage/
+
+# Environment files (injected at runtime via docker-compose)
+.env
+
+# IDE & OS
+.idea/
+.vscode/
+*.DS_Store
+
+# SQLite dev databases
+*.db
+*.sqlite3
+
+# Test / coverage artefacts
+.pytest_cache/
+htmlcov/
+.coverage
