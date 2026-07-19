@@ -15,6 +15,11 @@ const mono = JetBrains_Mono({
 export const metadata = {
   title: "Contract Guardian AI Workspace",
   description: "AI-Powered Contract Risk, Compliance & Negotiation Workspace",
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/favicon.ico",
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({ children }) {
