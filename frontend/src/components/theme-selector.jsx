@@ -88,7 +88,7 @@ export default function ThemeSelector() {
   return (
     <div className="flex items-center gap-2">
       <Select value={theme} onValueChange={setTheme}>
-        <SelectTrigger className="w-[150px] bg-background border-border text-foreground h-8 rounded text-xs select-trigger-theme focus:ring-indigo-500">
+        <SelectTrigger className="w-[130px] sm:w-[150px] bg-background border-border text-foreground h-8 rounded text-xs select-trigger-theme focus:ring-indigo-500">
           <div className="flex items-center gap-2">
             {getThemeIcon(theme)}
             <span className="font-medium">{getThemeLabel(theme)}</span>

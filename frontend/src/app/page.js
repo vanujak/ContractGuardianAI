@@ -497,10 +497,10 @@ export default function Home() {
       )}
       {/* LANDING SCREEN */}
       {screen === "landing" && (
-        <div className="fixed inset-0 z-10 flex h-dvh w-full flex-col overflow-hidden">
+        <div className="relative z-10 flex min-h-screen w-full flex-col">
           {/* Landing Header */}
           <header className="w-full flex items-center justify-between px-5 py-3 max-w-6xl mx-auto shrink-0">
-            <span className="text-sm font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-1">
+            <span className="text-xs sm:text-sm font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-1">
               Contract Guardian{" "}
               <span className="bg-indigo-600 text-[9px] font-bold text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider">
                 AI
@@ -509,7 +509,7 @@ export default function Home() {
             <ThemeSelector />
           </header>
 
-          <main className="flex min-h-0 flex-1 flex-col items-center justify-center max-w-6xl mx-auto px-5 py-2 w-full">
+          <main className="flex flex-1 flex-col items-center justify-start lg:justify-center max-w-6xl mx-auto px-5 py-6 md:py-12 w-full">
             {/* Header Title */}
             <div className="text-center space-y-3 max-w-2xl mb-5">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
