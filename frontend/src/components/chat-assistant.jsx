@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { api } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 const QUICK_QUESTIONS = [
   "Can I terminate this contract?",
@@ -32,7 +33,8 @@ export default function ChatAssistant({
   contractId,
   persona,
   isDemoMode,
-  demoChatMock
+  demoChatMock,
+  className
 }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -122,7 +124,7 @@ export default function ChatAssistant({
   };
 
   return (
-    <div className="flex h-full min-h-[420px] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white/95 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
+    <div className={cn("flex h-full min-h-[420px] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white/95 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/95", className)}>
       <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-slate-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/40">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-indigo-100 bg-indigo-50 text-indigo-600 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-400">

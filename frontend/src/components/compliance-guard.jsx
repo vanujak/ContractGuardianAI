@@ -98,7 +98,7 @@ export default function ComplianceGuard({
           <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Target Legal Jurisdiction:</span>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex w-full sm:w-auto gap-2">
           <Select
             value={region}
             onValueChange={(val) => {
@@ -107,7 +107,7 @@ export default function ComplianceGuard({
             }}
             disabled={loading}
           >
-            <SelectTrigger className="w-[220px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 h-8 rounded text-xs">
+            <SelectTrigger className="w-full sm:w-[220px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 h-8 rounded text-xs">
               <SelectValue placeholder="Select Country" />
             </SelectTrigger>
             <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-xs">

@@ -133,7 +133,7 @@ export default function RiskRadar({
                   {/* Template Snippet */}
                   <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded p-3 space-y-1 relative group">
                     <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block font-sans">Proposed Template Wording:</span>
-                    <p className="text-sm text-slate-800 dark:text-slate-200 font-mono leading-normal pr-8">
+                    <p className="text-sm text-slate-800 dark:text-slate-200 font-mono leading-normal pr-16 md:pr-8">
                       {clause.sampleTemplate}
                     </p>
                     <div className="absolute right-2 top-2 flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">

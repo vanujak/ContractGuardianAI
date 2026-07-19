@@ -318,6 +318,9 @@ export default function Home() {
   const handleHighlightTrigger = (text, severity) => {
     setHighlightText(text);
     setHighlightSeverity(severity);
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      setActiveTab("document");
+    }
   };
 
   const refreshAnalysisForDraft = async (updatedText) => {
@@ -543,11 +546,11 @@ export default function Home() {
                 <div className="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-900/60 flex items-center justify-center mb-3 text-indigo-400">
                   <Upload className="w-5 h-5 stroke-1.5" />
                 </div>
-                <div className="space-y-1 mb-4">
+                <div className="space-y-1 mb-4 font-sans">
                   <h3 className="text-sm font-bold text-slate-900 dark:text-slate-200">
                     Drag & Drop Contract File
                   </h3>
-                  <p className="hidden sm:block text-sm text-slate-500 dark:text-slate-300 max-w-[280px]">
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-300 max-w-[280px]">
                     Supports PDF or TXT files. Maximum size 10MB.
                   </p>
                 </div>
@@ -584,7 +587,7 @@ export default function Home() {
                 </h2>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 md:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-4">
                 {PRELOADED_Demos.map((demo) => (
                   <Card
                     key={demo.id}
@@ -598,10 +601,10 @@ export default function Home() {
                           {demo.title}
                         </span>
                       </div>
-                      <p className="hidden sm:block text-xs leading-snug text-slate-600 dark:text-slate-300">
+                      <p className="text-xs leading-snug text-slate-600 dark:text-slate-300">
                         {demo.desc}
                       </p>
-                      <div className="flex items-center gap-1 text-[10px] md:text-xs font-bold text-indigo-400 uppercase tracking-wider">
+                      <div className="flex items-center gap-1 text-[10px] md:text-xs font-bold text-indigo-400 uppercase tracking-wider font-sans">
                         Start Review{" "}
                         <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                       </div>
@@ -699,7 +702,7 @@ export default function Home() {
                   variant="outline"
                   size="sm"
                   onClick={() => setIsEditorVisible((visible) => !visible)}
-                  className="h-9 rounded-md border border-slate-200 bg-white/80 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300 dark:hover:bg-slate-800"
+                  className="hidden lg:inline-flex h-9 rounded-md border border-slate-200 bg-white/80 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300 dark:hover:bg-slate-800"
                   title={
                     isEditorVisible ? "Hide live editor" : "Show live editor"
                   }
@@ -726,8 +729,8 @@ export default function Home() {
             <div
               className={`mx-auto grid h-full min-h-0 gap-4 p-4 transition-[max-width] duration-300 lg:p-6 xl:gap-6 ${
                 isEditorVisible
-                  ? "w-full max-w-none grid-rows-[minmax(0,1fr)_minmax(0,42dvh)] lg:grid-cols-[minmax(0,1fr)_minmax(340px,480px)] lg:grid-rows-1 xl:grid-cols-[minmax(0,1fr)_minmax(380px,520px)]"
-                  : "w-full max-w-6xl grid-rows-1 grid-cols-1"
+                  ? "w-full max-w-none grid-cols-1 grid-rows-1 lg:grid-cols-[minmax(0,1fr)_minmax(340px,480px)] lg:grid-rows-1 xl:grid-cols-[minmax(0,1fr)_minmax(380px,520px)]"
+                  : "w-full max-w-6xl grid-cols-1 grid-rows-1"
               }`}
             >
               {/* Analysis Tabs */}
@@ -769,14 +772,20 @@ export default function Home() {
                     >
                       Chat
                     </TabsTrigger>
+                    <TabsTrigger
+                      value="document"
+                      className="lg:hidden min-w-[92px] flex-1 cursor-pointer rounded-md px-2 py-2 text-xs font-semibold uppercase tracking-wider text-slate-500 data-active:bg-white data-active:text-slate-900 dark:text-slate-400 dark:data-active:bg-slate-900 dark:data-active:text-slate-100 sm:px-3 sm:py-1.5"
+                    >
+                      Contract
+                    </TabsTrigger>
                   </TabsList>
 
                   {/* Tabs Body Contents */}
-                  <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable]">
+                  <div className="min-h-0 flex-1 flex flex-col min-w-0">
                     {/* Dashboard Tab */}
                     <TabsContent
                       value="health"
-                      className="m-0 focus-visible:outline-none"
+                      className="m-0 focus-visible:outline-none flex-1 overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable]"
                     >
                       <HealthDashboard
                         analysis={analysisData}
@@ -787,7 +796,7 @@ export default function Home() {
                     {/* Risks Tab */}
                     <TabsContent
                       value="radar"
-                      className="m-0 focus-visible:outline-none"
+                      className="m-0 focus-visible:outline-none flex-1 overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable]"
                     >
                       <RiskRadar
                         analysis={analysisData}
@@ -799,7 +808,7 @@ export default function Home() {
                     {/* Negotiation Tab */}
                     <TabsContent
                       value="negotiation"
-                      className="m-0 focus-visible:outline-none"
+                      className="m-0 focus-visible:outline-none flex-1 overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable]"
                     >
                       <NegotiationHub
                         analysis={analysisData}
@@ -810,7 +819,7 @@ export default function Home() {
                     {/* Compliance Tab */}
                     <TabsContent
                       value="compliance"
-                      className="m-0 focus-visible:outline-none"
+                      className="m-0 focus-visible:outline-none flex-1 overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable]"
                     >
                       <ComplianceGuard
                         contractId={activeContract?.id}
@@ -822,13 +831,32 @@ export default function Home() {
                     {/* Chat Tab */}
                     <TabsContent
                       value="chat"
-                      className="m-0 focus-visible:outline-none"
+                      className="m-0 focus-visible:outline-none flex-1 flex flex-col min-h-0"
                     >
                       <ChatAssistant
                         contractId={activeContract?.id}
                         persona={currentPersona}
                         isDemoMode={isDemoMode}
                         demoChatMock={demoChatMock}
+                        className="flex-1"
+                      />
+                    </TabsContent>
+
+                    {/* Mobile Document Tab */}
+                    <TabsContent
+                      value="document"
+                      className="m-0 focus-visible:outline-none lg:hidden flex-1 flex flex-col min-h-0"
+                    >
+                      <DocumentViewer
+                        rawText={activeContract?.raw_text || ""}
+                        highlightText={highlightText}
+                        highlightSeverity={highlightSeverity}
+                        onSaveDraft={saveDraftWithoutAnalysis}
+                        onSaveEdit={refreshAnalysisForDraft}
+                        analysisStale={analysisStale}
+                        isAnalyzingDraft={isAnalyzingDraft}
+                        remainingReanalyses={remainingReanalyses}
+                        className="flex-1"
                       />
                     </TabsContent>
                   </div>
@@ -836,7 +864,7 @@ export default function Home() {
               </section>
 
               {isEditorVisible && (
-                <aside className="min-h-0 min-w-0 overflow-hidden">
+                <aside className="hidden lg:block min-h-0 min-w-0 overflow-hidden">
                   <DocumentViewer
                     rawText={activeContract?.raw_text || ""}
                     highlightText={highlightText}

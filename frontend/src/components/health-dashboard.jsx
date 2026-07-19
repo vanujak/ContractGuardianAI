@@ -115,7 +115,7 @@ export default function HealthDashboard({
       </div>
 
       {/* Actionable Metrics Grid */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-2 gap-3 sm:gap-6">
         {/* Missing Clauses Card */}
         <div 
           onClick={() => onNavigateTab("radar")}

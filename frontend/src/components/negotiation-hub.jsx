@@ -81,7 +81,7 @@ export default function NegotiationHub({
                   </div>
 
                   {/* Action buttons */}
-                  <div className="flex justify-end items-center gap-2 pt-1 border-t border-slate-200 dark:border-slate-800">
+                  <div className="flex flex-wrap justify-end items-center gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                     <Button
                       variant="outline"
                       onClick={() => copyToClipboard(item.proposedWording, index)}
