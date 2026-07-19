@@ -9,6 +9,20 @@ from app.routes import contracts, chat
 try:
     Base.metadata.create_all(bind=engine)
     print("Database tables initialized successfully.")
+    
+    # Run manual migration check for file_hash column (useful for existing databases)
+    try:
+        from sqlalchemy import text
+        from sqlalchemy.exc import OperationalError
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE contracts ADD COLUMN file_hash VARCHAR"))
+            conn.commit()
+            print("Added file_hash column migration successfully.")
+    except OperationalError:
+        # Expected if column already exists
+        pass
+    except Exception as e:
+        print(f"Migration status warning: {str(e)}")
 except Exception as e:
     print(f"Error initializing database tables: {str(e)}")
 

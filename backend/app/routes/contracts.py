@@ -9,6 +9,7 @@ from app.services.gemini import analyze_contract_with_gemini, compare_contracts_
 from app.services.quota import verify_quota, get_quota_details
 from pydantic import BaseModel
 import json
+import hashlib
 
 router = APIRouter(prefix="/api/contracts", tags=["Contracts"])
 
@@ -27,6 +28,19 @@ def upload_contract(file: UploadFile = File(...), db: Session = Depends(get_db))
         
         file_bytes = file.file.read()
         
+        # Calculate SHA-256 checksum of document bytes
+        file_hash = hashlib.sha256(file_bytes).hexdigest()
+        
+        # Check if document has already been uploaded
+        existing_contract = db.query(Contract).filter(
+            Contract.file_hash == file_hash,
+            Contract.file_hash.isnot(None)
+        ).first()
+        
+        if existing_contract:
+            print(f"Duplicate contract detected (SHA-256: '{file_hash}'). Reusing contract ID '{existing_contract.id}'")
+            return existing_contract
+        
         # 1. Parse text from file bytes
         raw_text = parse_pdf(file_bytes, filename)
         
@@ -42,7 +56,8 @@ def upload_contract(file: UploadFile = File(...), db: Session = Depends(get_db))
         contract = Contract(
             title=filename,
             s3_key=s3_key,
-            raw_text=raw_text
+            raw_text=raw_text,
+            file_hash=file_hash
         )
         
         # Final safety check before database operations
@@ -102,6 +117,7 @@ def edit_contract_text(contract_id: str, request: EditContractRequest, db: Sessi
     
     try:
         contract.raw_text = request.raw_text.replace('\x00', '')
+        contract.file_hash = None # Clear hash as document has been customized
         
         # Clear existing analysis cache as the contract text is now updated
         db.query(Analysis).filter(Analysis.contract_id == contract_id).delete()

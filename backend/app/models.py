@@ -11,6 +11,7 @@ class Contract(Base):
     title = Column(String, nullable=False)
     s3_key = Column(String, nullable=False)
     raw_text = Column(Text, nullable=False)
+    file_hash = Column(String, nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
