@@ -28,6 +28,19 @@ class PersonaAnalysisResult(BaseModel):
     negotiations: List[NegotiationItem] = Field(description="List of negotiation suggestions with side-by-side alternative wordings")
     missingClauses: List[MissingClauseItem] = Field(description="List of missing clauses relevant to this contract type")
 
+class PartyAnalysisResult(BaseModel):
+    partyName: str = Field(description="Name of the detected party (e.g. Alex Mercer, Sterling Properties)")
+    partyRole: str = Field(description="Detected role of the party (e.g. Employee, Employer, Client, Contractor, Landlord, Tenant)")
+    fairnessScore: int = Field(description="Overall fairness score for this party from 0 to 100")
+    riskScore: int = Field(description="Overall risk score for this party from 0 to 100")
+    summary: List[str] = Field(description="A 3-minute executive summary for this party consisting of 4-6 high-impact bullet points")
+    riskRadar: List[RiskRadarItem] = Field(description="List of detected clauses with active risk assessments for this party")
+    negotiations: List[NegotiationItem] = Field(description="List of negotiation suggestions with side-by-side alternative wordings for this party")
+    missingClauses: List[MissingClauseItem] = Field(description="List of missing clauses relevant to this party")
+
+class ContractAnalysisResult(BaseModel):
+    parties: List[PartyAnalysisResult] = Field(description="Detailed analysis for each detected party in the contract")
+
 # --- Client Request/Response Models ---
 
 class ContractResponse(BaseModel):

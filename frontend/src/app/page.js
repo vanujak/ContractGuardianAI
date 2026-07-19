@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 
 // Imports of custom components
-import PersonaSelector from "@/components/persona-selector";
+import PartySelector from "@/components/persona-selector";
 import DocumentViewer from "@/components/document-viewer";
 import HealthDashboard from "@/components/health-dashboard";
 import RiskRadar from "@/components/risk-radar";
@@ -73,9 +73,11 @@ export default function Home() {
   const [activeContract, setActiveContract] = useState(
     DEV_DIRECT_WORKSPACE ? MOCK_CONTRACTS.employment : null,
   );
-  const [currentPersona, setCurrentPersona] = useState("Employee");
   const [analysisData, setAnalysisData] = useState(
-    DEV_DIRECT_WORKSPACE ? MOCK_ANALYSES.employment.Employee : null,
+    DEV_DIRECT_WORKSPACE ? MOCK_ANALYSES.employment : null,
+  );
+  const [activeParty, setActiveParty] = useState(
+    DEV_DIRECT_WORKSPACE ? MOCK_ANALYSES.employment.parties[0] : null,
   );
   const [isDemoMode, setIsDemoMode] = useState(
     DEV_DIRECT_WORKSPACE ? true : false,
@@ -129,11 +131,11 @@ export default function Home() {
 
     const messages = [
       "Extracting structure from PDF document...",
-      "Analyzing clauses through the selected persona lens...",
+      "Analyzing clauses for all contracting parties...",
       "Auditing compliance with local regulations...",
       "Generating negotiation suggestions...",
       "Mapping RAG chat workspace indexes...",
-      "Finishing review workbook...",
+      "Finishing analysis workbook...",
     ];
 
     let index = 0;
@@ -149,13 +151,17 @@ export default function Home() {
   const handleSelectDemo = (demo) => {
     setIsDemoMode(true);
     setActiveContract(demo.contract);
-    setCurrentPersona(demo.defaultPersona);
     setScreen("processing");
 
     // Simulate loading/analysis delay
     setTimeout(() => {
-      const mockResult = MOCK_ANALYSES[demo.id][demo.defaultPersona];
+      const mockResult = MOCK_ANALYSES[demo.id];
       setAnalysisData(mockResult);
+      if (mockResult?.parties?.length > 0) {
+        setActiveParty(mockResult.parties[0]);
+      } else {
+        setActiveParty(null);
+      }
       setScreen("workspace");
       setActiveTab("health");
       setHighlightText("");
@@ -163,38 +169,10 @@ export default function Home() {
     }, 2000);
   };
 
-  // Switch persona lens in workspace
-  const handlePersonaChange = async (newPersona) => {
-    setCurrentPersona(newPersona);
-    setScreen("processing");
+  // Switch party lens in workspace
+  const handlePartyChange = (party) => {
+    setActiveParty(party);
     setHighlightText("");
-
-    if (isDemoMode) {
-      setTimeout(() => {
-        // Look up preset demo data, fallback to generic generator if unavailable
-        const demoId = activeContract.id;
-        const mockResult =
-          MOCK_ANALYSES[demoId]?.[newPersona] ||
-          MOCK_ANALYSES.employment.Employee;
-        setAnalysisData(mockResult);
-        setScreen("workspace");
-        setAnalysisStale(false);
-      }, 1200);
-      return;
-    }
-
-    try {
-      // Fetch fresh analysis from server with the new persona
-      const data = await api.analyzeContract(activeContract.id, newPersona);
-      setAnalysisData(data);
-      setAnalysisStale(false);
-      setScreen("workspace");
-    } catch (e) {
-      console.error(e);
-      checkQuotaExceeded(e);
-      // Fallback
-      setScreen("workspace");
-    }
   };
 
   // Upload handler for custom file
@@ -204,27 +182,19 @@ export default function Home() {
     setScreen("processing");
     setIsDemoMode(false);
 
-    // Select default persona based on keyword guess
-    const name = file.name.toLowerCase();
-    let guessedPersona = "Employee";
-    if (name.includes("nda") || name.includes("confidential")) {
-      guessedPersona = "StartupFounder";
-    } else if (name.includes("lease") || name.includes("rental")) {
-      guessedPersona = "Tenant";
-    } else if (name.includes("freelance") || name.includes("service")) {
-      guessedPersona = "Freelancer";
-    }
-
-    setCurrentPersona(guessedPersona);
-
     try {
       // 1. Upload to backend (which parses text, saves in DB/S3)
       const contract = await api.uploadContract(file);
       setActiveContract(contract);
 
       // 2. Fetch analyze API
-      const analysis = await api.analyzeContract(contract.id, guessedPersona);
+      const analysis = await api.analyzeContract(contract.id);
       setAnalysisData(analysis);
+      if (analysis?.parties?.length > 0) {
+        setActiveParty(analysis.parties[0]);
+      } else {
+        setActiveParty(null);
+      }
 
       setScreen("workspace");
       setActiveTab("health");
@@ -344,11 +314,16 @@ export default function Home() {
       }
 
       await api.editContractText(activeContract.id, updatedText);
-      const freshAnalysis = await api.analyzeContract(
-        activeContract.id,
-        currentPersona,
-      );
+      const freshAnalysis = await api.analyzeContract(activeContract.id);
       setAnalysisData(freshAnalysis);
+      if (freshAnalysis?.parties?.length > 0) {
+        const matching = freshAnalysis.parties.find(
+          p => p.partyName === activeParty?.partyName
+        ) || freshAnalysis.parties[0];
+        setActiveParty(matching);
+      } else {
+        setActiveParty(null);
+      }
       setRemainingReanalyses((remaining) => Math.max(remaining - 1, 0));
       setAnalysisStale(false);
       setActiveTab("health");
@@ -454,7 +429,7 @@ export default function Home() {
       return "Payment is scheduled monthly. It lacks provisions protecting you from late payments (like interest fees).";
     }
 
-    return `I am reviewing this ${activeContract.title} under the lens of an active **${currentPersona}**. It contains restrictive clauses regarding covenants, liability, and dispute locations. What specific clause can I explain for you?`;
+    return `I am analyzing this ${activeContract.title} on behalf of **${activeParty?.partyName} (${activeParty?.partyRole})**. It contains restrictive clauses regarding covenants, liability, and dispute locations. What specific clause can I explain for you?`;
   };
 
   return (
@@ -524,8 +499,8 @@ export default function Home() {
                 with AI.
               </h1>
               <p className="hidden sm:block text-sm md:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl mx-auto">
-                An advanced workspace that reviews agreements from your specific
-                persona's perspective, audits regional laws, and helps you draft
+                An advanced workspace that auto-detects contracting parties, analyzes agreements from
+                each party's perspective, audits regional laws, and helps you draft
                 fairer terms.
               </p>
             </div>
@@ -715,9 +690,10 @@ export default function Home() {
                   {isEditorVisible ? "Hide Editor" : "Show Editor"}
                 </Button>
                 <ThemeSelector />
-                <PersonaSelector
-                  currentPersona={currentPersona}
-                  onChange={handlePersonaChange}
+                <PartySelector
+                  parties={analysisData?.parties || []}
+                  activeParty={activeParty}
+                  onChange={handlePartyChange}
                   disabled={false}
                 />
               </div>
@@ -788,7 +764,7 @@ export default function Home() {
                       className="m-0 focus-visible:outline-none flex-1 overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable]"
                     >
                       <HealthDashboard
-                        analysis={analysisData}
+                        analysis={activeParty}
                         onNavigateTab={handleNavigateTab}
                       />
                     </TabsContent>
@@ -799,7 +775,7 @@ export default function Home() {
                       className="m-0 focus-visible:outline-none flex-1 overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable]"
                     >
                       <RiskRadar
-                        analysis={analysisData}
+                        analysis={activeParty}
                         onHighlightTrigger={handleHighlightTrigger}
                         onApplyBoilerplate={handleApplyBoilerplate}
                       />
@@ -811,7 +787,7 @@ export default function Home() {
                       className="m-0 focus-visible:outline-none flex-1 overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable]"
                     >
                       <NegotiationHub
-                        analysis={analysisData}
+                        analysis={activeParty}
                         onApplyRevision={handleApplyRevision}
                       />
                     </TabsContent>
@@ -835,7 +811,7 @@ export default function Home() {
                     >
                       <ChatAssistant
                         contractId={activeContract?.id}
-                        persona={currentPersona}
+                        persona={activeParty ? `${activeParty.partyName} (${activeParty.partyRole})` : ""}
                         isDemoMode={isDemoMode}
                         demoChatMock={demoChatMock}
                         className="flex-1"

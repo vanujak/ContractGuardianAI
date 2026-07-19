@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Contract, Analysis
-from app.schemas import ContractResponse, PersonaAnalysisResult, CompareRequest, CompareResponse, ComplianceResponse
+from app.schemas import ContractResponse, PersonaAnalysisResult, CompareRequest, CompareResponse, ComplianceResponse, ContractAnalysisResult
 from app.services.parser import parse_pdf
 from app.services.s3 import upload_contract_file
 from app.services.gemini import analyze_contract_with_gemini, compare_contracts_with_gemini, check_compliance_with_gemini
@@ -128,14 +128,13 @@ def edit_contract_text(contract_id: str, request: EditContractRequest, db: Sessi
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/{contract_id}/analyze", dependencies=[Depends(verify_quota)])
+@router.get("/{contract_id}/analyze", response_model=ContractAnalysisResult, dependencies=[Depends(verify_quota)])
 def analyze_contract(
     contract_id: str, 
-    persona: str = Query(..., description="The persona lens to evaluate, e.g. Employee"),
     db: Session = Depends(get_db)
 ):
     """
-    Analyzes contract from a selected persona. Caches the analysis in DB.
+    Analyzes contract by auto-detecting parties and analyzing their perspectives. Caches the analysis in DB.
     """
     contract = db.query(Contract).filter(Contract.id == contract_id).first()
     if not contract:
@@ -144,27 +143,36 @@ def analyze_contract(
     # Check cache
     cached_analysis = db.query(Analysis).filter(
         Analysis.contract_id == contract_id,
-        Analysis.persona == persona
+        Analysis.persona == "auto"
     ).first()
     
     if cached_analysis:
-        print(f"Returning cached analysis for contract {contract_id} as persona {persona}")
+        print(f"Returning cached multi-party analysis for contract {contract_id}")
         # If SQLite returns as dict, or Postgres returns as dict/string
         if isinstance(cached_analysis.data, str):
             return json.loads(cached_analysis.data)
         return cached_analysis.data
 
     # Perform analysis
-    print(f"Generating fresh analysis for contract {contract_id} as persona {persona}")
-    analysis_data = analyze_contract_with_gemini(contract.raw_text, persona, db=db)
+    print(f"Generating fresh multi-party analysis for contract {contract_id}")
+    analysis_data = analyze_contract_with_gemini(contract.raw_text, db=db)
     
     try:
+        # Calculate overall average scores for database record compatibility
+        parties_list = analysis_data.get("parties", [])
+        if parties_list:
+            fairness_avg = int(sum(p.get("fairnessScore", 50) for p in parties_list) / len(parties_list))
+            risk_avg = int(sum(p.get("riskScore", 50) for p in parties_list) / len(parties_list))
+        else:
+            fairness_avg = 50
+            risk_avg = 50
+
         # Cache results in DB
         db_analysis = Analysis(
             contract_id=contract_id,
-            persona=persona,
-            fairness_score=analysis_data.get("fairnessScore", 50),
-            risk_score=analysis_data.get("riskScore", 50),
+            persona="auto",
+            fairness_score=fairness_avg,
+            risk_score=risk_avg,
             data=analysis_data
         )
         db.add(db_analysis)

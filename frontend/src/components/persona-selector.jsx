@@ -7,7 +7,8 @@ import {
   UserCheck, 
   Cpu, 
   Coins, 
-  Scale
+  Scale,
+  ShieldCheck
 } from "lucide-react";
 import {
   Select,
@@ -17,59 +18,81 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export const PERSONAS = [
-  { id: "Employee", label: "Employee", icon: Briefcase, color: "text-blue-400" },
-  { id: "Employer", label: "Employer", icon: Building, color: "text-indigo-400" },
-  { id: "Freelancer", label: "Freelancer", icon: User, color: "text-teal-400" },
-  { id: "Client", label: "Client", icon: UserCheck, color: "text-emerald-400" },
-  { id: "Tenant", label: "Tenant", icon: Home, color: "text-amber-400" },
-  { id: "Landlord", label: "Landlord", icon: Coins, color: "text-orange-400" },
-  { id: "StartupFounder", label: "Startup Founder", icon: Cpu, color: "text-purple-400" },
-  { id: "Investor", label: "Investor", icon: Scale, color: "text-pink-400" },
-];
+export const getPartyIcon = (role) => {
+  const r = (role || "").toLowerCase();
+  if (r.includes("employee") || r.includes("freelancer") || r.includes("workman") || r.includes("staff")) return Briefcase;
+  if (r.includes("employer") || r.includes("company") || r.includes("corporation") || r.includes("firm")) return Building;
+  if (r.includes("tenant") || r.includes("renter")) return Home;
+  if (r.includes("landlord") || r.includes("owner") || r.includes("properties")) return Coins;
+  if (r.includes("client") || r.includes("contractor")) return UserCheck;
+  if (r.includes("founder") || r.includes("startup") || r.includes("discloser")) return Cpu;
+  if (r.includes("investor") || r.includes("partner") || r.includes("recipient")) return Scale;
+  return User;
+};
 
-export default function PersonaSelector({ currentPersona, onChange, disabled }) {
-  const getPersonaIcon = (personaId) => {
-    const persona = PERSONAS.find(p => p.id === personaId);
-    if (!persona) return Briefcase;
-    return persona.icon;
+export const getPartyColor = (role) => {
+  const r = (role || "").toLowerCase();
+  if (r.includes("employee") || r.includes("freelancer")) return "text-blue-400";
+  if (r.includes("employer") || r.includes("company")) return "text-indigo-400";
+  if (r.includes("tenant")) return "text-amber-400";
+  if (r.includes("landlord")) return "text-orange-400";
+  if (r.includes("client") || r.includes("contractor")) return "text-emerald-400";
+  if (r.includes("founder") || r.includes("startup") || r.includes("discloser")) return "text-purple-400";
+  if (r.includes("investor") || r.includes("partner") || r.includes("recipient")) return "text-pink-400";
+  return "text-slate-400";
+};
+
+export default function PartySelector({ parties = [], activeParty, onChange, disabled }) {
+  if (!parties || parties.length === 0) {
+    return (
+      <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+        <ShieldCheck className="w-4 h-4 text-indigo-400 animate-pulse" />
+        Detecting Parties...
+      </div>
+    );
+  }
+
+  const currentRole = activeParty?.partyRole || "";
+  const currentName = activeParty?.partyName || "";
+  const ActiveIcon = getPartyIcon(currentRole);
+
+  const getPartyLabel = (party) => {
+    return `${party.partyName} (${party.partyRole})`;
   };
-
-  const getPersonaColor = (personaId) => {
-    const persona = PERSONAS.find(p => p.id === personaId);
-    return persona ? persona.color : "text-gray-400";
-  };
-
-  const ActiveIcon = getPersonaIcon(currentPersona);
 
   return (
     <div className="flex items-center gap-3">
       <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-        Reviewing As:
+        Opinions For:
       </span>
       <Select
-        value={currentPersona}
-        onValueChange={onChange}
+        value={currentName}
+        onValueChange={(name) => {
+          const selected = parties.find(p => p.partyName === name);
+          if (selected) onChange(selected);
+        }}
         disabled={disabled}
       >
-        <SelectTrigger className="w-[200px] bg-background border-border text-foreground h-9 rounded-md focus:ring-indigo-500">
-          <div className="flex items-center gap-2">
-            <ActiveIcon className={`w-4 h-4 ${getPersonaColor(currentPersona)}`} />
-            <SelectValue placeholder="Select Persona" />
+        <SelectTrigger className="w-[240px] bg-background border-border text-foreground h-9 rounded-md focus:ring-indigo-500 text-left">
+          <div className="flex items-center gap-2 truncate">
+            <ActiveIcon className={`w-4 h-4 shrink-0 ${getPartyColor(currentRole)}`} />
+            <span className="truncate text-xs font-medium">
+              {currentName ? `${currentName} (${currentRole})` : "Select Party"}
+            </span>
           </div>
         </SelectTrigger>
         <SelectContent className="bg-popover border-border text-popover-foreground">
-          {PERSONAS.map((persona) => {
-            const IconComponent = persona.icon;
+          {parties.map((party) => {
+            const IconComponent = getPartyIcon(party.partyRole);
             return (
               <SelectItem
-                key={persona.id}
-                value={persona.id}
+                key={party.partyName}
+                value={party.partyName}
                 className="cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <IconComponent className={`w-4 h-4 ${persona.color}`} />
-                  <span>{persona.label}</span>
+                  <IconComponent className={`w-4 h-4 shrink-0 ${getPartyColor(party.partyRole)}`} />
+                  <span className="text-xs font-medium">{getPartyLabel(party)}</span>
                 </div>
               </SelectItem>
             );

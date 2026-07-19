@@ -2,7 +2,7 @@ import json
 from google import genai
 from google.genai import types
 from app.config import settings
-from app.schemas import PersonaAnalysisResult, CompareResponse, ComplianceResponse
+from app.schemas import PersonaAnalysisResult, CompareResponse, ComplianceResponse, ContractAnalysisResult
 from typing import List, Dict, Any
 from sqlalchemy.orm import Session
 from app.services.quota import increment_token_usage
@@ -16,34 +16,37 @@ def get_gemini_client():
         print(f"Failed to initialize Gemini Client: {str(e)}")
         return None
 
-def analyze_contract_with_gemini(text: str, persona: str, db: Session = None) -> Dict[str, Any]:
+def analyze_contract_with_gemini(text: str, db: Session = None) -> Dict[str, Any]:
     """
-    Analyzes contract text from the perspective of a specific persona.
-    Returns data matching PersonaAnalysisResult schema.
+    Auto-detects the contracting parties and analyzes the contract text from the perspective of each party.
+    Returns data matching ContractAnalysisResult schema.
     """
     client = get_gemini_client()
     if not client:
-        mock_data = get_mock_analysis_data(text, persona)
+        mock_data = get_mock_analysis_data(text)
         if db:
             increment_token_usage(db, 15000)
         return mock_data
 
     prompt = f"""
-    You are an elite legal workspace assistant. Analyze the following contract from the perspective of a **{persona}**.
+    You are an elite legal workspace assistant. Analyze the following contract.
+    First, auto-detect all key parties (at least the main contracting parties) involved in the contract and identify their names and roles.
+    Then, for each party, perform a comprehensive analysis of their perspective.
     
     CRITICAL INSTRUCTIONS:
-    1. Assess the contract thoroughly through the lens of a {persona}. Identify what clauses protect them, what clauses disadvantage them, and what is missing.
-    2. Assess the overall `fairnessScore` (0-100) and `riskScore` (0-100) from this persona's viewpoint.
-    3. Generate 4-6 bullet points of executive summary customized for this persona.
-    4. For the `riskRadar` items:
+    1. For each detected party, identify their exact name and role (e.g. Employee, Employer, Tenant, Landlord, Discloser, Recipient, Client, Contractor).
+    2. Assess the contract thoroughly through the lens of that party. Identify what clauses protect them, what clauses disadvantage them, and what is missing.
+    3. Assess the overall `fairnessScore` (0-100) and `riskScore` (0-100) from that specific party's viewpoint.
+    4. Generate 4-6 bullet points of executive summary customized for that party.
+    5. For the `riskRadar` items of each party:
        - Find clauses of high/medium/low risk.
-       - Explain why it is risky for a {persona}.
+       - Explain why it is risky for this specific party.
        - The `triggerText` MUST be an EXACT word-for-word substring from the contract text below. If you cannot find the exact substring, do not make it up, copy it exactly.
-    5. For the `negotiations` items:
+    6. For the `negotiations` items of each party:
        - Provide suggestions where a clause is heavily one-sided.
        - The `triggerText` MUST be an EXACT word-for-word substring from the contract.
-       - The `proposedWording` must be a fairer, balanced, win-win version that a {persona} can propose.
-    6. For the `missingClauses` items, identify clauses that should be in this contract type but are absent, and provide boilerplate templates.
+       - The `proposedWording` must be a fairer, balanced, win-win version that this party can propose.
+    7. For the `missingClauses` items of each party, identify clauses that should be in this contract type but are absent, and provide boilerplate templates.
 
     CONTRACT TEXT:
     ---
@@ -57,7 +60,7 @@ def analyze_contract_with_gemini(text: str, persona: str, db: Session = None) ->
             contents=prompt,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
-                response_schema=PersonaAnalysisResult,
+                response_schema=ContractAnalysisResult,
                 temperature=0.1
             )
         )
@@ -66,7 +69,7 @@ def analyze_contract_with_gemini(text: str, persona: str, db: Session = None) ->
         return json.loads(response.text)
     except Exception as e:
         print(f"Gemini API analysis failed: {str(e)}. Falling back to mock data.")
-        mock_data = get_mock_analysis_data(text, persona)
+        mock_data = get_mock_analysis_data(text)
         if db:
             increment_token_usage(db, 15000)
         return mock_data
@@ -255,98 +258,388 @@ def check_compliance_with_gemini(text: str, region: str, db: Session = None) -> 
 # Mock Data Generators (Zero-Config Mode)
 # ==========================================
 
-def get_mock_analysis_data(text: str, persona: str) -> Dict[str, Any]:
+def get_mock_analysis_data(text: str) -> Dict[str, Any]:
     """
-    Provides mock analysis data if API key is not configured.
+    Provides mock analysis data for auto-detected parties if API key is not configured.
     """
     lower_text = text.lower()
     
-    # Detect contract type
     is_nda = "non-disclosure" in lower_text or "confidentiality" in lower_text or "nda" in lower_text
     is_lease = "lease" in lower_text or "rental" in lower_text or "tenant" in lower_text
     
-    # Set default values based on persona
-    if persona in ["Employee", "Freelancer"]:
-        fairness = 45 if not is_nda else 75
-        risk = 65 if not is_nda else 35
-    elif persona in ["Employer", "Client"]:
-        fairness = 85
-        risk = 25
-    else:
-        fairness = 60
-        risk = 45
+    parties = []
+    
+    if is_nda:
+        # Alpha Startups (Founder/Discloser)
+        p1 = {
+            "partyName": "Alpha Startups Inc.",
+            "partyRole": "Discloser/Founder",
+            "fairnessScore": 50,
+            "riskScore": 70,
+            "summary": [
+                "This mutual NDA contains **significant loopholes** that heavily disadvantage you as a Startup Founder.",
+                "The Venture Capital firm has carved out the right to **disclose your information to partners without breach**.",
+                "The **confidentiality term is only 1 year**, meaning they can freely share or copy your startup code after 12 months.",
+                "Liability for the VC firm is **capped at $500**, making it impossible to seek meaningful damages if they leak your secret ideas.",
+                "Gives the VC firm a **free license to use any feedback** or product ideas you discuss."
+            ],
+            "riskRadar": [
+                {
+                    "category": "Information Sharing Loophole",
+                    "riskLevel": "High",
+                    "riskReason": "The VC company can share your proprietary documents with their partners, affiliates, and advisors under the guise of this clause, bypassing secrecy.",
+                    "triggerText": "VCP reserves the right to disclose any information received to its affiliates, partners, and advisors without notice or restriction, and such disclosure shall not be deemed a breach"
+                },
+                {
+                    "category": "Obligation Duration",
+                    "riskLevel": "High",
+                    "riskReason": "A 1-year confidentiality term is far too short. If fundraising takes 6 months, your secrets are only protected for 6 additional months.",
+                    "triggerText": "This Agreement shall expire one (1) year from the date hereof. Upon expiration, all obligations of confidentiality under this Agreement shall cease immediately"
+                },
+                {
+                    "category": "Liability Limit",
+                    "riskLevel": "High",
+                    "riskReason": "If they leak your core patent-pending algorithm causing $1M in damage, you can only collect $500.",
+                    "triggerText": "maximum aggregate liability for any breaches of this Agreement shall be limited to $500"
+                },
+                {
+                    "category": "Intellectual Property License",
+                    "riskLevel": "Medium",
+                    "riskReason": "Allows them to use your design ideas or feature suggestions royalty-free, which they could pass to competitor portfolio companies.",
+                    "triggerText": "VCP shall have a royalty-free license to use any feedback or product ideas shared by Alpha during discussions."
+                }
+            ],
+            "negotiations": [
+                {
+                    "triggerText": "VCP reserves the right to disclose any information received to its affiliates, partners, and advisors without notice or restriction, and such disclosure shall not be deemed a breach",
+                    "proposedWording": "Receiving Party may disclose Confidential Information only to its employees and advisors who have a strict 'need to know' and who are bound by confidentiality agreements at least as restrictive as this Agreement.",
+                    "explanation": "Restricts disclosure to legitimate team members and makes them bound to secrecy."
+                },
+                {
+                    "triggerText": "This Agreement shall expire one (1) year from the date hereof. Upon expiration, all obligations of confidentiality under this Agreement shall cease immediately",
+                    "proposedWording": "The confidentiality obligations hereunder shall survive for a period of three (3) years from the date of disclosure.",
+                    "explanation": "Extends the protection duration to a reasonable standard time for fundraising cycles."
+                },
+                {
+                    "triggerText": "maximum aggregate liability for any breaches of this Agreement shall be limited to $500",
+                    "proposedWording": "Neither party shall limit its liability for direct damages arising from a breach of confidentiality obligations under this Agreement.",
+                    "explanation": "Ensures meaningful legal recourse and deterrence if VCP leaks proprietary IP."
+                },
+                {
+                    "triggerText": "VCP shall have a royalty-free license to use any feedback or product ideas shared by Alpha during discussions.",
+                    "proposedWording": "Neither party shall acquire any intellectual property rights or licenses under this Agreement.",
+                    "explanation": "Prevents VCP from exploiting suggestions or design discussions without a commercial agreement."
+                }
+            ],
+            "missingClauses": [
+                {
+                    "clauseName": "Dispute Resolution",
+                    "explanation": "No clear mechanism for disputes is outlined, which could lead to direct litigation.",
+                    "sampleTemplate": "In the event of a dispute, the parties agree to first attempt mediation in good faith before filing suit."
+                },
+                {
+                    "clauseName": "Governing Law",
+                    "explanation": "The contract does not state which state/country's laws govern this document.",
+                    "sampleTemplate": "This Agreement shall be governed by and construed in accordance with the laws of the State of Delaware."
+                }
+            ]
+        }
         
-    # Standard fallback triggers
-    trigger_liq = "Company may terminate this agreement at any time without notice or cause"
-    trigger_noncomp = "Employee shall not engage in any competitive business for a period of five (5) years"
-    trigger_ip = "All intellectual property created during the term of employment shall belong solely to the Company"
-    trigger_indem = "The Contractor agrees to indemnify and hold harmless the Client from all claims and liabilities"
-
-    # Make sure triggers exist in some form, or we inject them in the mock contract text
-    # Risk Radar
-    risk_items = [
-        {
-            "category": "Termination",
-            "riskLevel": "High" if persona in ["Employee", "Freelancer", "Tenant"] else "Low",
-            "riskReason": f"Allows unilateral termination without notice. Disadvantageous for {persona}.",
-            "triggerText": trigger_liq if trigger_liq.lower() in lower_text else "at any time without notice"
-        },
-        {
-            "category": "Intellectual Property",
-            "riskLevel": "Medium",
-            "riskReason": f"Broad assignment of all intellectual property, including work done outside business hours.",
-            "triggerText": trigger_ip if trigger_ip.lower() in lower_text else "shall belong solely to the"
+        # Venture Capital Partners (Recipient/Investor)
+        p2 = {
+            "partyName": "Venture Capital Partners Ltd",
+            "partyRole": "Recipient/Investor",
+            "fairnessScore": 88,
+            "riskScore": 15,
+            "summary": [
+                "This contract offers **maximum legal flexibility** for Venture Capital Partners Ltd.",
+                "You can disclose received information to partners and affiliates without a breach.",
+                "Your liability is capped at a very safe **$500**, protecting you from catastrophic claims.",
+                "Confidentiality duration is only 1 year, ensuring you are quickly released from the secrecy obligations."
+            ],
+            "riskRadar": [
+                {
+                    "category": "Loophole Enforceability",
+                    "riskLevel": "Medium",
+                    "riskReason": "The broad disclosure loophole might be seen by a court as undermining the 'Mutual' intent of the NDA, which could jeopardize its validity.",
+                    "triggerText": "VCP reserves the right to disclose any information received to its affiliates, partners, and advisors without notice or restriction"
+                }
+            ],
+            "negotiations": [
+                {
+                    "triggerText": "VCP reserves the right to disclose any information received to its affiliates, partners, and advisors without notice or restriction",
+                    "proposedWording": "VCP shall use reasonable efforts to ensure affiliates and partners maintain confidentiality of the disclosed information.",
+                    "explanation": "Maintains flexibility for VCP while providing reasonable comfort to the counterparty."
+                }
+            ],
+            "missingClauses": [
+                {
+                    "clauseName": "Company Property Return",
+                    "explanation": "Lacks a specific clause obligating the partner to return files.",
+                    "sampleTemplate": "Upon written request, each party shall promptly return or destroy all confidential documents."
+                }
+            ]
         }
-    ]
-    
-    if not is_nda:
-        risk_items.append({
-            "category": "Non-Compete",
-            "riskLevel": "High" if persona == "Employee" else "Low",
-            "riskReason": "A 5-year non-compete is highly restrictive and likely unenforceable in many jurisdictions.",
-            "triggerText": trigger_noncomp if trigger_noncomp.lower() in lower_text else "period of five (5) years"
-        })
-
-    # Negotiation Suggestions
-    negotiations = [
-        {
-            "triggerText": "at any time without notice",
-            "proposedWording": "either party may terminate this agreement upon thirty (30) days' written notice",
-            "explanation": "Provides mutual termination security and guarantees transition time."
-        },
-        {
-            "triggerText": "shall belong solely to the",
-            "proposedWording": "IP created directly in performance of the services shall belong to the Client, while pre-existing IP remains with the Creator.",
-            "explanation": "Protects your independent tools, code, and pre-existing libraries."
+        parties = [p1, p2]
+        
+    elif is_lease:
+        # Jordan Smith (Tenant)
+        p1 = {
+            "partyName": "Jordan Smith",
+            "partyRole": "Tenant",
+            "fairnessScore": 25,
+            "riskScore": 85,
+            "summary": [
+                "This lease is **extremely one-sided** and predatory towards Jordan Smith (Tenant).",
+                "Includes **exorbitant late fees** ($250 instantly, plus $50/day) which accumulate rapidly.",
+                "Allows **landlord entry at any time without prior notice**, violating privacy rights.",
+                "Requires tenant to pay for **all plumbing and electrical system repairs**, even for normal wear and tear.",
+                "Renews automatically for **another 12 months** with a 15% rent hike unless notice is given 90 days early."
+            ],
+            "riskRadar": [
+                {
+                    "category": "Late Fee Penalty",
+                    "riskLevel": "High",
+                    "riskReason": "Late fees accumulate extremely fast and could lead to thousands of dollars of debt in a few weeks.",
+                    "triggerText": "If rent is not received by the 2nd day of the month, a late fee of $250 shall be applied immediately. For every day thereafter that rent remains unpaid, an additional fee of $50 per day shall accumulate."
+                },
+                {
+                    "category": "Landlord Entry Rights",
+                    "riskLevel": "High",
+                    "riskReason": "Unannounced entry is a severe intrusion on privacy and violates standard landlord-tenant laws in most jurisdictions.",
+                    "triggerText": "The Landlord reserves the right to enter the leased premises at any time, without prior notice to the Tenant"
+                },
+                {
+                    "category": "Automatic Renewal",
+                    "riskLevel": "High",
+                    "riskReason": "Locks you into a new 1-year contract at a steep 15% increase unless you remember to cancel 90 days before the lease ends.",
+                    "triggerText": "this Lease shall automatically renew for another 12-month term at a rent rate increase of 15%, unless the Tenant provides written notice of non-renewal at least ninety (90) days prior"
+                },
+                {
+                    "category": "Maintenance Liability",
+                    "riskLevel": "High",
+                    "riskReason": "You could be forced to pay thousands of dollars to replace a broken furnace or water main through no fault of your own.",
+                    "triggerText": "The Tenant shall be solely responsible for all maintenance and repair costs, including repairs to plumbing, heating, air conditioning, and electrical systems, regardless of whether the damage was caused by the Tenant or normal wear and tear."
+                }
+            ],
+            "negotiations": [
+                {
+                    "triggerText": "If rent is not received by the 2nd day of the month, a late fee of $250 shall be applied immediately. For every day thereafter that rent remains unpaid, an additional fee of $50 per day shall accumulate.",
+                    "proposedWording": "If rent is not received by the 5th day of the month, a flat late fee of $50 shall be applied. No daily interest shall accumulate.",
+                    "explanation": "Replaces exponential daily fees with a standard grace period and capped fee."
+                },
+                {
+                    "triggerText": "The Landlord reserves the right to enter the leased premises at any time, without prior notice to the Tenant",
+                    "proposedWording": "The Landlord shall provide at least twenty-four (24) hours' written notice before entering the premises, except in the case of a bona fide emergency.",
+                    "explanation": "Ensures privacy and aligns with tenant rights guidelines."
+                },
+                {
+                    "triggerText": "this Lease shall automatically renew for another 12-month term at a rent rate increase of 15%, unless the Tenant provides written notice of non-renewal at least ninety (90) days prior",
+                    "proposedWording": "Upon expiration, the Lease shall continue on a month-to-month basis at the same rate, subject to rent increases permitted by local rent control boards, with 30 days' non-renewal notice.",
+                    "explanation": "Replaces automatic annual lock-in with a standard month-to-month transition."
+                },
+                {
+                    "triggerText": "The Tenant shall be solely responsible for all maintenance and repair costs, including repairs to plumbing, heating, air conditioning, and electrical systems, regardless of whether the damage was caused by the Tenant or normal wear and tear.",
+                    "proposedWording": "The Tenant shall maintain the property in clean condition. The Landlord shall be responsible for all structural repairs and major appliance/utility maintenance, including heating, cooling, plumbing, and electrical utilities.",
+                    "explanation": "Places repair burdens for standard wear-and-tear back on the landlord."
+                }
+            ],
+            "missingClauses": [
+                {
+                    "clauseName": "Security Deposit Return Timeline",
+                    "explanation": "The lease lacks a deadline for the landlord to return the security deposit, which could delay refund recovery.",
+                    "sampleTemplate": "The Landlord shall return the Tenant's security deposit within twenty-one (21) days of lease termination, along with an itemized receipt for any deductions."
+                },
+                {
+                    "clauseName": "Quiet Enjoyment",
+                    "explanation": "A clause guaranteeing the tenant's right to peaceful and quiet possession of the home without landlord harassment.",
+                    "sampleTemplate": "The Tenant shall have quiet enjoyment and peaceful possession of the premises without hindrance by the Landlord."
+                }
+            ]
         }
-    ]
-    
-    missing = [
-        {
-            "clauseName": "Dispute Resolution",
-            "explanation": "No clear mechanism for disputes is outlined, which could lead to direct litigation.",
-            "sampleTemplate": "In the event of a dispute, the parties agree to first attempt mediation in good faith before filing suit."
-        },
-        {
-            "clauseName": "Governing Law",
-            "explanation": "The contract does not state which state/country's laws govern this document.",
-            "sampleTemplate": "This Agreement shall be governed by and construed in accordance with the laws of the State of Delaware."
+        
+        # Sterling Properties (Landlord)
+        p2 = {
+            "partyName": "Sterling Properties",
+            "partyRole": "Landlord",
+            "fairnessScore": 95,
+            "riskScore": 12,
+            "summary": [
+                "This contract offers **maximum leverage** for Sterling Properties.",
+                "Enforces aggressive, profitable late penalties.",
+                "Allows instant, hassle-free property entry for inspections.",
+                "Completely shifts utility maintenance and repair costs to the tenant."
+            ],
+            "riskRadar": [
+                {
+                    "category": "Late Fee Penalty Enforceability",
+                    "riskLevel": "Medium",
+                    "riskReason": "Late fees that exceed statutory maximums (often 5% of monthly rent) are regularly struck down by housing tribunals as unenforceable penalty clauses.",
+                    "triggerText": "a late fee of $250 shall be applied immediately. For every day thereafter... an additional fee of $50 per day"
+                },
+                {
+                    "category": "Trespass Risk",
+                    "riskLevel": "Medium",
+                    "riskReason": "Unannounced entry in non-emergency situations can expose the landlord to lawsuits for breach of covenant of quiet enjoyment and illegal trespass.",
+                    "triggerText": "enter the leased premises at any time, without prior notice"
+                }
+            ],
+            "negotiations": [
+                {
+                    "triggerText": "a late fee of $250 shall be applied immediately. For every day thereafter... an additional fee of $50 per day",
+                    "proposedWording": "a late fee of $50 if unpaid by the 5th",
+                    "explanation": "Prevents court challenges by capping late fees within normal statutory limits."
+                }
+            ],
+            "missingClauses": [
+                {
+                    "clauseName": "Lead-Based Paint Disclosure",
+                    "explanation": "Lacks the federally required disclosure form for older properties.",
+                    "sampleTemplate": "Landlord shall provide Lead-Based Paint disclosure form if building was constructed before 1978."
+                }
+            ]
         }
-    ]
-
+        parties = [p1, p2]
+        
+    else:
+        # Default / Software Engineer Agreement (Alex Mercer / Nexus Tech Solutions)
+        # Alex Mercer (Employee)
+        p1 = {
+            "partyName": "Alex Mercer",
+            "partyRole": "Employee",
+            "fairnessScore": 35,
+            "riskScore": 82,
+            "summary": [
+                "This contract is **highly unfavorable** to you (the Employee) and contains several one-sided terms.",
+                "You are subject to **immediate 'at-will' termination** by the employer, but you must give 60 days' notice.",
+                "There is a **5-year non-compete clause** which is excessively restrictive and likely legally unenforceable.",
+                "An **unlimited intellectual property clause** claims ownership over everything you create, even on your own time at home.",
+                "You are asked to **indemnify the company for software bugs**, exposing you to extreme financial liability."
+            ],
+            "riskRadar": [
+                {
+                    "category": "Termination Notice",
+                    "riskLevel": "High",
+                    "riskReason": "You are required to give 60 days' notice to quit, while the company can fire you instantly without cause or notice.",
+                    "triggerText": "The Company may terminate this agreement at any time without notice or cause, for any reason whatsoever. The Employee may terminate this agreement by providing sixty (60) days' prior written notice"
+                },
+                {
+                    "category": "Overtime Compensation",
+                    "riskLevel": "Medium",
+                    "riskReason": "Requires you to work unpaid overtime as projects demand, which violates basic fair labor expectations.",
+                    "triggerText": "Employee is expected to work overtime as required by projects, and no additional overtime compensation shall be paid."
+                },
+                {
+                    "category": "Intellectual Property",
+                    "riskLevel": "High",
+                    "riskReason": "The company claims ownership of code and designs you write at home, in your own free time, using your own computer.",
+                    "triggerText": "whether developed during working hours, using Company equipment, or on the Employee's own time at home."
+                },
+                {
+                    "category": "Non-Compete",
+                    "riskLevel": "High",
+                    "riskReason": "A 5-year non-compete is extremely long. Courts rarely enforce non-competes longer than 1 year for standard developers.",
+                    "triggerText": "for a period of five (5) years following the termination of employment for any reason, the Employee shall not engage in, perform services for, or establish any competitive business"
+                },
+                {
+                    "category": "Indemnification & Liability",
+                    "riskLevel": "High",
+                    "riskReason": "You could be held personally liable for company financial losses caused by standard coding bugs or server crashes.",
+                    "triggerText": "The Employee agrees to indemnify and hold harmless the Company from any and all damages, claims, or liabilities arising out of the Employee's work, including any software bugs, systems downtime, or coding errors"
+                }
+            ],
+            "negotiations": [
+                {
+                    "triggerText": "The Company may terminate this agreement at any time without notice or cause, for any reason whatsoever. The Employee may terminate this agreement by providing sixty (60) days' prior written notice",
+                    "proposedWording": "Either party may terminate this Agreement at any time, with or without cause, by providing thirty (30) days' prior written notice to the other party.",
+                    "explanation": "Makes the termination notice period mutual and balanced, giving you time to find a new job."
+                },
+                {
+                    "triggerText": "Employee is expected to work overtime as required by projects, and no additional overtime compensation shall be paid.",
+                    "proposedWording": "Employee shall receive standard overtime compensation in accordance with local labor laws for hours worked beyond 40 hours per week, subject to prior manager approval.",
+                    "explanation": "Guarantees fair compensation for extra hours worked."
+                },
+                {
+                    "triggerText": "whether developed during working hours, using Company equipment, or on the Employee's own time at home.",
+                    "proposedWording": "excluding any software, code, or ideas developed by the Employee entirely on their own time, without using Company equipment, trade secrets, or proprietary information.",
+                    "explanation": "Protects your hobby projects, open-source contributions, and independent side-hustles."
+                },
+                {
+                    "triggerText": "for a period of five (5) years following the termination of employment for any reason, the Employee shall not engage in, perform services for, or establish any competitive business within a 100-mile radius",
+                    "proposedWording": "for a period of twelve (12) months following the termination of employment, the Employee shall not solicit Company clients or join direct competitors within a 15-mile radius.",
+                    "explanation": "Reduces the duration and scope to standard, legally enforceable, and reasonable limits."
+                },
+                {
+                    "triggerText": "The Employee agrees to indemnify and hold harmless the Company from any and all damages, claims, or liabilities arising out of the Employee's work, including any software bugs, systems downtime, or coding errors",
+                    "proposedWording": "The Employee shall not be personally liable for normal errors, omissions, bugs, or system downtime occurring in the good-faith performance of their employment duties.",
+                    "explanation": "Removes professional liability. Standard coding mistakes should never be penalized with personal lawsuits."
+                }
+            ],
+            "missingClauses": [
+                {
+                    "clauseName": "Paid Time Off (PTO) Policy",
+                    "explanation": "The contract contains zero references to vacation days, sick leave, or national holidays, leaving you at the mercy of oral agreements.",
+                    "sampleTemplate": "The Employee shall be entitled to fifteen (15) days of paid annual leave, in addition to standard public holidays, accrued monthly."
+                },
+                {
+                    "clauseName": "Severance Pay",
+                    "explanation": "Given that the contract is at-will, there is no safety net if you are terminated without cause.",
+                    "sampleTemplate": "In the event of termination by the Company without Cause, the Employee shall receive severance pay equivalent to two (2) months of base salary."
+                }
+            ]
+        }
+        
+        # Nexus Tech Solutions (Employer)
+        p2 = {
+            "partyName": "Nexus Tech Solutions LLC",
+            "partyRole": "Employer",
+            "fairnessScore": 85,
+            "riskScore": 20,
+            "summary": [
+                "This contract offers **maximum legal protection** for the Company.",
+                "Allows rapid termination of underperforming staff without notice liability.",
+                "Guarantees a 60-day replacement transition window since the employee must give notice.",
+                "Ensures total ownership of all intellectual property, including side projects that might use company ideas.",
+                "Places all system failure risks on the employee via the bugs indemnity clause."
+            ],
+            "riskRadar": [
+                {
+                    "category": "Non-Compete Enforceability",
+                    "riskLevel": "Medium",
+                    "riskReason": "While a 5-year non-compete protects the company, it is highly likely to be struck down in court as too restrictive, leaving you with zero protection.",
+                    "triggerText": "for a period of five (5) years following the termination of employment for any reason"
+                },
+                {
+                    "category": "Employee Indemnity Validity",
+                    "riskLevel": "High",
+                    "riskReason": "Courts generally throw out clauses making standard employees personally liable for operational errors. This could lead to regulatory audits.",
+                    "triggerText": "The Employee agrees to indemnify and hold harmless the Company from any and all damages, claims, or liabilities arising out of the Employee's work"
+                }
+            ],
+            "negotiations": [
+                {
+                    "triggerText": "for a period of five (5) years following the termination of employment for any reason",
+                    "proposedWording": "for a period of twelve (12) months following the termination of employment for any reason",
+                    "explanation": "A 1-year non-compete is much more likely to stand up in court, guaranteeing you real, enforceable protection."
+                },
+                {
+                    "triggerText": "The Employee agrees to indemnify and hold harmless the Company",
+                    "proposedWording": "The Company will maintain general liability and errors/omissions insurance covering standard developer actions in the course of employment.",
+                    "explanation": "Protects the company through insurance rather than unenforceable employee lawsuits."
+                }
+            ],
+            "missingClauses": [
+                {
+                    "clauseName": "Company Property Return",
+                    "explanation": "Lacks a specific clause obligating the employee to return company laptops, cards, and keys upon termination.",
+                    "sampleTemplate": "Upon termination of employment, the Employee shall immediately return all Company-owned property, including hardware, credentials, and documentation."
+                }
+            ]
+        }
+        parties = [p1, p2]
+        
     return {
-        "fairnessScore": fairness,
-        "riskScore": risk,
-        "summary": [
-            f"Review performed under the lens of a **{persona}**.",
-            "Contains unilateral termination terms favoring the drafting party.",
-            "Assigns complete intellectual property rights without carving out pre-existing assets.",
-            "Lacks a standard dispute resolution clause and local governing law designations.",
-            "Includes restrictive non-compete terms that could impact future work options."
-        ],
-        "riskRadar": risk_items,
-        "negotiations": negotiations,
-        "missingClauses": missing
+        "parties": parties
     }
 
 def get_mock_chat_response(text: str, question: str, persona: str) -> str:

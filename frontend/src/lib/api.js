@@ -73,11 +73,11 @@ export const api = {
   },
 
   /**
-   * Trigger or retrieve cached persona-based contract analysis
+   * Trigger or retrieve cached multi-party contract analysis
    */
-  async analyzeContract(contractId, persona) {
+  async analyzeContract(contractId) {
     const response = await fetch(
-      `${API_BASE_URL}/api/contracts/${contractId}/analyze?persona=${encodeURIComponent(persona)}`
+      `${API_BASE_URL}/api/contracts/${contractId}/analyze`
     );
     return handleResponse(response);
   },
