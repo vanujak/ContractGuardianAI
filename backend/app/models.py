@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Text, Integer, DateTime, ForeignKey, JSON
+from sqlalchemy import Column, String, Text, Integer, DateTime, ForeignKey, JSON, Date
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -40,3 +40,11 @@ class ChatMessage(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     contract = relationship("Contract", back_populates="chat_messages")
+
+class TokenUsage(Base):
+    __tablename__ = "token_usages"
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    date = Column(Date, nullable=False, unique=True, default=lambda: datetime.utcnow().date())
+    tokens_used = Column(Integer, nullable=False, default=0)
+

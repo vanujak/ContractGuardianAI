@@ -1,0 +1,63 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy Application
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Create Remote Directory
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "mkdir -p ~/ContractGuardianAI"
+
+      - name: Package Codebase
+        run: |
+          tar -czf app.tar.gz \
+            --exclude='node_modules' \
+            --exclude='.git' \
+            --exclude='backend/venv' \
+            --exclude='backend/local_storage' \
+            --exclude='.env' \
+            --exclude='app.tar.gz' \
+            .
+
+      - name: Transfer Archive to EC2
+        run: |
+          scp -i ~/.ssh/id_rsa app.tar.gz ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:~/ContractGuardianAI/app.tar.gz
+
+      - name: Extract Code and Launch Stack on EC2
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
+            cd ~/ContractGuardianAI
+            tar -xzf app.tar.gz
+            rm app.tar.gz
+            
+            # Securely generate .env file from secrets
+            echo 'DATABASE_URL=${{ secrets.DATABASE_URL }}' > .env
+            echo 'GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}' >> .env
+            echo 'GEMINI_MODEL=${{ secrets.GEMINI_MODEL }}' >> .env
+            echo 'AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}' >> .env
+            echo 'AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}' >> .env
+            echo 'AWS_REGION=${{ secrets.AWS_REGION }}' >> .env
+            echo 'AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}' >> .env
+            echo 'NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}' >> .env
+            
+            # Restart containers with the latest build
+            sudo docker compose down
+            sudo docker compose up -d --build
+          "

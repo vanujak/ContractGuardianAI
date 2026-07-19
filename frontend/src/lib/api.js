@@ -35,6 +35,14 @@ export const api = {
   },
 
   /**
+   * Get current daily Gemini token quota status
+   */
+  async getQuotaStatus() {
+    const response = await fetch(`${API_BASE_URL}/api/contracts/quota-status`);
+    return handleResponse(response);
+  },
+
+  /**
    * Get contract metadata
    */
   async getContract(contractId) {

@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     # Gemini API Settings
     GEMINI_API_KEY: Optional[str] = None
     GEMINI_MODEL: str = "gemini-2.5-flash"
+    GEMINI_DAILY_TOKEN_LIMIT: int = 500000
     
     # AWS S3 Settings (optional, fallbacks to local workspace storage if empty)
     AWS_ACCESS_KEY_ID: Optional[str] = None

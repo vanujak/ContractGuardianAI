@@ -4,11 +4,12 @@ from app.database import get_db
 from app.models import Contract, ChatMessage
 from app.schemas import ChatRequest, ChatResponse, ChatHistoryItem
 from app.services.gemini import chat_with_gemini
+from app.services.quota import verify_quota
 from typing import List
 
 router = APIRouter(prefix="/api/contracts", tags=["Chat"])
 
-@router.post("/{contract_id}/chat", response_model=ChatResponse)
+@router.post("/{contract_id}/chat", response_model=ChatResponse, dependencies=[Depends(verify_quota)])
 def query_contract_chat(contract_id: str, request: ChatRequest, db: Session = Depends(get_db)):
     """
     Asks a question about a contract from a specific persona's point of view.
@@ -37,7 +38,8 @@ def query_contract_chat(contract_id: str, request: ChatRequest, db: Session = De
         text=contract.raw_text,
         question=request.question,
         persona=request.persona,
-        history=history_list
+        history=history_list,
+        db=db
     )
     
     # Save assistant's answer to database

@@ -17,6 +17,10 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
+# Add build-time arguments for Next.js environment variables
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 # Copy ALL node_modules (incl. devDependencies) for the build step
 COPY package.json package-lock.json ./
 RUN npm ci

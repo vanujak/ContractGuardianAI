@@ -37,7 +37,7 @@ COPY --from=builder /install /usr/local
 COPY app/ ./app/
 
 # Local storage volume mount point
-RUN mkdir -p ./local_storage
+RUN mkdir -p ./db ./local_storage
 
 # Expose FastAPI port
 EXPOSE 8000

@@ -96,6 +96,33 @@ export default function Home() {
   const [dragActive, setDragActive] = useState(false);
   const [uploadError, setUploadError] = useState("");
 
+  // Quota Status State
+  const [quotaStatus, setQuotaStatus] = useState(null);
+
+  const checkQuotaExceeded = async (error) => {
+    if (error?.message?.toLowerCase().includes("quota") || error?.message?.toLowerCase().includes("limit")) {
+      try {
+        const status = await api.getQuotaStatus();
+        setQuotaStatus(status);
+      } catch (err) {
+        console.error("Failed to check quota limit", err);
+      }
+    }
+  };
+
+  // Fetch daily token quota on mount
+  useEffect(() => {
+    const fetchQuota = async () => {
+      try {
+        const status = await api.getQuotaStatus();
+        setQuotaStatus(status);
+      } catch (e) {
+        console.error("Failed to fetch daily token quota status", e);
+      }
+    };
+    fetchQuota();
+  }, []);
+
   // Cycle loading messages during processing screen for aesthetic effect
   useEffect(() => {
     if (screen !== "processing") return;
@@ -164,6 +191,7 @@ export default function Home() {
       setScreen("workspace");
     } catch (e) {
       console.error(e);
+      checkQuotaExceeded(e);
       // Fallback
       setScreen("workspace");
     }
@@ -204,6 +232,7 @@ export default function Home() {
       setAnalysisStale(false);
     } catch (e) {
       console.error(e);
+      checkQuotaExceeded(e);
       setUploadError(
         e.message ||
           "Failed to process contract. Make sure backend is running.",
@@ -323,6 +352,7 @@ export default function Home() {
       setHighlightText("");
     } catch (e) {
       console.error("Failed to refresh analysis after draft edit", e);
+      checkQuotaExceeded(e);
       setAnalysisStale(true);
       throw e;
     } finally {
@@ -427,6 +457,41 @@ export default function Home() {
   return (
     <div className="relative isolate flex-1 flex flex-col min-h-screen bg-transparent text-foreground selection:bg-indigo-600/40 selection:text-white">
       <div className="app-animated-bg" aria-hidden="true" />
+
+      {/* QUOTA LIMIT GUARD OVERLAY */}
+      {quotaStatus?.is_blocked && (
+        <div className="fixed inset-0 z-50 flex h-dvh w-full flex-col items-center justify-center bg-slate-900/90 dark:bg-slate-950/95 backdrop-blur-md px-6 text-center">
+          <div className="max-w-md w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 shadow-2xl space-y-6">
+            <div className="w-16 h-16 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center mx-auto animate-pulse animate-duration-1000">
+              <AlertCircle className="w-8 h-8" />
+            </div>
+            
+            <div className="space-y-2">
+              <h2 className="text-xl font-black text-slate-900 dark:text-white">
+                Daily API Limit Reached
+              </h2>
+              <p className="text-sm text-slate-600 dark:text-slate-300">
+                The Gemini AI token daily usage limit has been exceeded. To prevent unexpected costs, the application is temporarily disabled.
+              </p>
+            </div>
+
+            <div className="p-4 bg-slate-100 dark:bg-slate-950/50 rounded-xl border border-slate-200/50 dark:border-slate-800/50 text-left space-y-2.5">
+              <div className="flex justify-between text-xs font-semibold text-slate-500">
+                <span>Daily Limit:</span>
+                <span className="text-slate-800 dark:text-slate-200">{quotaStatus.limit?.toLocaleString()} tokens</span>
+              </div>
+              <div className="flex justify-between text-xs font-semibold text-slate-500">
+                <span>Today's Usage:</span>
+                <span className="text-rose-500">{quotaStatus.used?.toLocaleString()} tokens</span>
+              </div>
+              <div className="border-t border-slate-200 dark:border-slate-800 pt-2.5 flex justify-between text-xs font-bold text-slate-800 dark:text-slate-200">
+                <span>Next Available Time:</span>
+                <span className="text-indigo-500 dark:text-indigo-400">{quotaStatus.next_available}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* LANDING SCREEN */}
       {screen === "landing" && (
         <div className="fixed inset-0 z-10 flex h-dvh w-full flex-col overflow-hidden">

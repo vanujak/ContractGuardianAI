@@ -4,6 +4,8 @@ from google.genai import types
 from app.config import settings
 from app.schemas import PersonaAnalysisResult, CompareResponse, ComplianceResponse
 from typing import List, Dict, Any
+from sqlalchemy.orm import Session
+from app.services.quota import increment_token_usage
 
 def get_gemini_client():
     if not settings.GEMINI_API_KEY:
@@ -14,14 +16,17 @@ def get_gemini_client():
         print(f"Failed to initialize Gemini Client: {str(e)}")
         return None
 
-def analyze_contract_with_gemini(text: str, persona: str) -> Dict[str, Any]:
+def analyze_contract_with_gemini(text: str, persona: str, db: Session = None) -> Dict[str, Any]:
     """
     Analyzes contract text from the perspective of a specific persona.
     Returns data matching PersonaAnalysisResult schema.
     """
     client = get_gemini_client()
     if not client:
-        return get_mock_analysis_data(text, persona)
+        mock_data = get_mock_analysis_data(text, persona)
+        if db:
+            increment_token_usage(db, 15000)
+        return mock_data
 
     prompt = f"""
     You are an elite legal workspace assistant. Analyze the following contract from the perspective of a **{persona}**.
@@ -56,12 +61,17 @@ def analyze_contract_with_gemini(text: str, persona: str) -> Dict[str, Any]:
                 temperature=0.1
             )
         )
+        if db and response.usage_metadata:
+            increment_token_usage(db, response.usage_metadata.total_token_count)
         return json.loads(response.text)
     except Exception as e:
         print(f"Gemini API analysis failed: {str(e)}. Falling back to mock data.")
-        return get_mock_analysis_data(text, persona)
+        mock_data = get_mock_analysis_data(text, persona)
+        if db:
+            increment_token_usage(db, 15000)
+        return mock_data
 
-def chat_with_gemini(text: str, question: str, persona: str, history: List[Dict[str, str]] = None) -> str:
+def chat_with_gemini(text: str, question: str, persona: str, history: List[Dict[str, str]] = None, db: Session = None) -> str:
     """
     Answers a question about the contract text from the perspective of the persona.
     Uses local TF-IDF RAG to slice contract and retrieve top matching paragraphs.
@@ -70,7 +80,10 @@ def chat_with_gemini(text: str, question: str, persona: str, history: List[Dict[
 
     client = get_gemini_client()
     if not client:
-        return get_mock_chat_response(text, question, persona)
+        mock_resp = get_mock_chat_response(text, question, persona)
+        if db:
+            increment_token_usage(db, 5000)
+        return mock_resp
 
     # 1. Retrieve the top 3 relevant paragraphs
     relevant_chunks = get_relevant_chunks(text, question, top_k=3)
@@ -100,12 +113,16 @@ def chat_with_gemini(text: str, question: str, persona: str, history: List[Dict[
             model=settings.GEMINI_MODEL,
             contents=prompt
         )
+        if db and response.usage_metadata:
+            increment_token_usage(db, response.usage_metadata.total_token_count)
         return response.text
     except Exception as e:
         print(f"Gemini API chat failed: {str(e)}")
+        if db:
+            increment_token_usage(db, 5000)
         return f"[API Error - Mock Answer] Since this contract mentions terms matching your question, please note that as a {persona}, this could affect your obligations. (API Key not set or quota exceeded)."
 
-def compare_contracts_with_gemini(text_a: str, text_b: str) -> Dict[str, Any]:
+def compare_contracts_with_gemini(text_a: str, text_b: str, db: Session = None) -> Dict[str, Any]:
     """
     Compares two contracts side-by-side.
     Uses local RAG to retrieve matching snippets for key parameters from both contracts
@@ -115,7 +132,10 @@ def compare_contracts_with_gemini(text_a: str, text_b: str) -> Dict[str, Any]:
 
     client = get_gemini_client()
     if not client:
-        return get_mock_comparison_data(text_a, text_b)
+        mock_data = get_mock_comparison_data(text_a, text_b)
+        if db:
+            increment_token_usage(db, 25000)
+        return mock_data
 
     comparison_parameters = {
         "Compensation & Fees": "salary compensation monthly payment fee rate invoice billing",
@@ -169,12 +189,17 @@ PARAMETER: {param_name}
                 temperature=0.1
             )
         )
+        if db and response.usage_metadata:
+            increment_token_usage(db, response.usage_metadata.total_token_count)
         return json.loads(response.text)
     except Exception as e:
         print(f"Gemini API comparison failed: {str(e)}. Falling back to mock comparison.")
-        return get_mock_comparison_data(text_a, text_b)
+        mock_data = get_mock_comparison_data(text_a, text_b)
+        if db:
+            increment_token_usage(db, 25000)
+        return mock_data
 
-def check_compliance_with_gemini(text: str, region: str) -> Dict[str, Any]:
+def check_compliance_with_gemini(text: str, region: str, db: Session = None) -> Dict[str, Any]:
     """
     Audits a contract for regional compliance (US, UK, India, Sri Lanka).
     Uses local RAG to retrieve compliance-critical paragraphs first.
@@ -183,7 +208,10 @@ def check_compliance_with_gemini(text: str, region: str) -> Dict[str, Any]:
 
     client = get_gemini_client()
     if not client:
-        return get_mock_compliance_data(text, region)
+        mock_data = get_mock_compliance_data(text, region)
+        if db:
+            increment_token_usage(db, 15000)
+        return mock_data
 
     # Retrieve compliance-critical sections
     compliance_keywords = "termination notice working hours salary taxes liability consumer protection dispute governing law"
@@ -212,10 +240,15 @@ def check_compliance_with_gemini(text: str, region: str) -> Dict[str, Any]:
                 temperature=0.2
             )
         )
+        if db and response.usage_metadata:
+            increment_token_usage(db, response.usage_metadata.total_token_count)
         return json.loads(response.text)
     except Exception as e:
         print(f"Gemini API compliance failed: {str(e)}. Falling back to mock compliance.")
-        return get_mock_compliance_data(text, region)
+        mock_data = get_mock_compliance_data(text, region)
+        if db:
+            increment_token_usage(db, 15000)
+        return mock_data
 
 
 # ==========================================

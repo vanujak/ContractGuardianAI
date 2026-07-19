@@ -6,6 +6,7 @@ from app.schemas import ContractResponse, PersonaAnalysisResult, CompareRequest,
 from app.services.parser import parse_pdf
 from app.services.s3 import upload_contract_file
 from app.services.gemini import analyze_contract_with_gemini, compare_contracts_with_gemini, check_compliance_with_gemini
+from app.services.quota import verify_quota, get_quota_details
 from pydantic import BaseModel
 import json
 
@@ -14,34 +15,60 @@ router = APIRouter(prefix="/api/contracts", tags=["Contracts"])
 class EditContractRequest(BaseModel):
     raw_text: str
 
-@router.post("/upload", response_model=ContractResponse)
+@router.post("/upload", response_model=ContractResponse, dependencies=[Depends(verify_quota)])
 def upload_contract(file: UploadFile = File(...), db: Session = Depends(get_db)):
     """
     Uploads a contract file, extracts text, uploads to S3/local-storage, and registers in DB.
     """
     try:
+        # Sanitize filename to ensure no NUL bytes are present
+        filename = file.filename.replace('\x00', '')
+        print(f"--- Uploading contract: '{filename}' ---")
+        
         file_bytes = file.file.read()
         
         # 1. Parse text from file bytes
-        raw_text = parse_pdf(file_bytes, file.filename)
+        raw_text = parse_pdf(file_bytes, filename)
+        
+        # Ensure raw_text is completely stripped of NUL bytes
+        raw_text = raw_text.replace('\x00', '')
+        print(f"Extracted raw text length: {len(raw_text)} chars")
         
         # 2. Upload the file to S3 or local directory
-        s3_key = upload_contract_file(file_bytes, file.filename)
+        s3_key = upload_contract_file(file_bytes, filename).replace('\x00', '')
+        print(f"Saved file key/path: '{s3_key}'")
         
         # 3. Create database entry
         contract = Contract(
-            title=file.filename,
+            title=filename,
             s3_key=s3_key,
             raw_text=raw_text
         )
+        
+        # Final safety check before database operations
+        if '\x00' in contract.title or '\x00' in contract.s3_key or '\x00' in contract.raw_text:
+            print("WARNING: NUL character detected in DB fields despite sanitization!")
+            contract.title = contract.title.replace('\x00', '')
+            contract.s3_key = contract.s3_key.replace('\x00', '')
+            contract.raw_text = contract.raw_text.replace('\x00', '')
+            
         db.add(contract)
         db.commit()
         db.refresh(contract)
+        print(f"Contract successfully saved in DB with ID: {contract.id}")
         
         return contract
     except Exception as e:
         db.rollback()
+        print(f"ERROR during contract upload: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
+
+@router.get("/quota-status")
+def quota_status(db: Session = Depends(get_db)):
+    """
+    Returns daily Gemini API token quota details.
+    """
+    return get_quota_details(db)
 
 @router.get("/{contract_id}", response_model=ContractResponse)
 def get_contract(contract_id: str, db: Session = Depends(get_db)):
@@ -85,7 +112,7 @@ def edit_contract_text(contract_id: str, request: EditContractRequest, db: Sessi
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/{contract_id}/analyze")
+@router.get("/{contract_id}/analyze", dependencies=[Depends(verify_quota)])
 def analyze_contract(
     contract_id: str, 
     persona: str = Query(..., description="The persona lens to evaluate, e.g. Employee"),
@@ -113,7 +140,7 @@ def analyze_contract(
 
     # Perform analysis
     print(f"Generating fresh analysis for contract {contract_id} as persona {persona}")
-    analysis_data = analyze_contract_with_gemini(contract.raw_text, persona)
+    analysis_data = analyze_contract_with_gemini(contract.raw_text, persona, db=db)
     
     try:
         # Cache results in DB
@@ -132,7 +159,7 @@ def analyze_contract(
         
     return analysis_data
 
-@router.post("/compare", response_model=CompareResponse)
+@router.post("/compare", response_model=CompareResponse, dependencies=[Depends(verify_quota)])
 def compare_contracts(request: CompareRequest, db: Session = Depends(get_db)):
     """
     Compares two contracts side-by-side.
@@ -143,10 +170,10 @@ def compare_contracts(request: CompareRequest, db: Session = Depends(get_db)):
     if not contract_a or not contract_b:
         raise HTTPException(status_code=404, detail="One or both contracts not found")
         
-    comparison = compare_contracts_with_gemini(contract_a.raw_text, contract_b.raw_text)
+    comparison = compare_contracts_with_gemini(contract_a.raw_text, contract_b.raw_text, db=db)
     return comparison
 
-@router.get("/{contract_id}/compliance", response_model=ComplianceResponse)
+@router.get("/{contract_id}/compliance", response_model=ComplianceResponse, dependencies=[Depends(verify_quota)])
 def get_compliance_report(
     contract_id: str, 
     region: str = Query("USA", description="Country/Region of law"),
@@ -159,5 +186,5 @@ def get_compliance_report(
     if not contract:
         raise HTTPException(status_code=404, detail="Contract not found")
         
-    report = check_compliance_with_gemini(contract.raw_text, region)
+    report = check_compliance_with_gemini(contract.raw_text, region, db=db)
     return report

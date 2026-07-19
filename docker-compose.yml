@@ -18,7 +18,7 @@ services:
     container_name: contractguardian-backend
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     environment:
       # ── App ──────────────────────────────────────────────────────────────
       PORT: "8000"
@@ -29,7 +29,7 @@ services:
       # the bundled Postgres service.
       #
       # DATABASE_URL: "postgresql://pguser:pgpassword@db:5432/contractguardian_db"
-      DATABASE_URL: "${DATABASE_URL:-sqlite:///./contract_guardian.db}"
+      DATABASE_URL: "${DATABASE_URL:-sqlite:///./db/contract_guardian.db}"
 
       # ── Gemini AI ─────────────────────────────────────────────────────────
       GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
@@ -44,7 +44,7 @@ services:
       # Persist locally uploaded files across container restarts
       - backend_local_storage:/app/local_storage
       # Persist SQLite database (ignored when using PostgreSQL)
-      - backend_sqlite:/app
+      - backend_sqlite:/app/db
     networks:
       - app-network
     # Uncomment if you switch to the PostgreSQL service below
@@ -63,10 +63,12 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
     container_name: contractguardian-frontend
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       NODE_ENV: "production"
       # Point the Next.js app at the backend API.
