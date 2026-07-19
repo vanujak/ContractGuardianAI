@@ -27,14 +27,14 @@ jobs:
 
       - name: Package Codebase
         run: |
-          tar -czf app.tar.gz \
+          tar --warning=no-file-changed -czf ../app.tar.gz \
             --exclude='node_modules' \
             --exclude='.git' \
             --exclude='backend/venv' \
             --exclude='backend/local_storage' \
             --exclude='.env' \
-            --exclude='app.tar.gz' \
             .
+          mv ../app.tar.gz ./app.tar.gz
 
       - name: Transfer Archive to EC2
         run: |
